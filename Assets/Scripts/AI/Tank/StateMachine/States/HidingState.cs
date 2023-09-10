@@ -2,17 +2,25 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HidingState : MonoBehaviour
+
+namespace CE6127.Tanks.AI
 {
-    // Start is called before the first frame update
-    void Start()
+    internal class HidingState : BaseState
     {
-        
+        private TankSM m_TankSM; // Reference to the tank state machine.
+        public HidingState(TankSM tankStateMachine) : base("Hiding", tankStateMachine) => m_TankSM = (TankSM)m_StateMachine;
+        // Start is called before the first frame update
+        void Start()
+        {
+            
+        }
+
+        // Update is called once per frame
+        public override void Update()
+        {
+            base.Update();
+            
+        }
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }

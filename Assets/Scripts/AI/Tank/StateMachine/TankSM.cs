@@ -65,8 +65,8 @@ namespace CE6127.Tanks.AI
         public float ActualFireInterval; // my initialization
         public float ShotCooldown; // the current cooldown
         public float DistanceToTarget; // self-explanatory...
-
-
+        public bool isLowHealth = false;
+        public TankHealth health;
 
         private bool m_Started = false; // Whether the tank has started moving.
         private Rigidbody m_Rigidbody;  // Reference used to the tank's regidbody.
@@ -121,9 +121,10 @@ namespace CE6127.Tanks.AI
             // StopDistance = Random.Range(StopAtTargetDist.x, StopAtTargetDist.y);
             
             // jon's initializations
-            TargetDistance = 30f;
+            TargetDistance = 35f; // i set to max, tank better at long range, don't need space to hold
             StopDistance = 22f;
             ActualFireInterval = 0.7f;
+            health = GetComponent<TankHealth>();
 
             SetStopDistanceToTarget();
 
@@ -194,7 +195,7 @@ namespace CE6127.Tanks.AI
             ShotCooldown -= Time.deltaTime;
             if(ShotCooldown > 0) return;
             ShotCooldown = ActualFireInterval;
-            
+
             // Create an instance of the shell and store a reference to it's rigidbody.
             Rigidbody shellInstance = Instantiate(Shell, FireTransform.position, FireTransform.rotation) as Rigidbody;
 
@@ -205,5 +206,40 @@ namespace CE6127.Tanks.AI
             SFXAudioSource.clip = ShotFiringAudioClip;
             SFXAudioSource.Play();
         }
+
+
+        // function to be called every update to transition to Hiding State
+        public void CheckHealth(){
+            if(isLowHealth) return;
+            
+            // based on max damage in ShellExplosion -> find a way to grab this dynamically
+            if(health.m_CurrentHealth < 12.5f)
+                isLowHealth = true;
+        }
+
+        // reorient to face the target
+        public void FaceTarget(){
+            var lookPos = Target.position - this.transform.position;
+            lookPos.y = 0f;
+            var rot = Quaternion.LookRotation(lookPos);
+            this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);
+        }
+
+        public void UpdateDistanceToTarget(){
+            if(Target == null) return;
+            DistanceToTarget = Vector3.Distance(this.transform.position, Target.position);
+        }
+
+        public void AttackTarget(float offset = 0f){
+            // offset because the tanks will be in motion, 
+            // to refine: can calculate whether the target is moving away + whether you are moving closer
+            if(offset == 0f){
+                offset = Random.Range(-3f, 3f);
+            }
+            LaunchProjectile(DistanceToTarget + offset);
+        }
+
+
+        
     }
 }

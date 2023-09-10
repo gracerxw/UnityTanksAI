@@ -31,22 +31,18 @@ namespace CE6127.Tanks.AI
             // if there is a target
             if (m_TankSM.Target != null)
             {
-                // calculate distance to see if tank in range
-                var dist = Vector3.Distance(m_TankSM.transform.position, m_TankSM.Target.position);
+                
+                m_TankSM.FaceTarget();
+                m_TankSM.UpdateDistanceToTarget();
 
                 // if not in range, switch to patrolling
-                if (dist > m_TankSM.TargetDistance)
+                if (m_TankSM.DistanceToTarget > m_TankSM.TargetDistance)
                     m_StateMachine.ChangeState(m_TankSM.m_States.Patrolling);
                 else {
-                    // shoots properly using euclidean distance
-                    m_TankSM.LaunchProjectile(dist);
+                    m_TankSM.AttackTarget();
                 }
             }
-
-            var lookPos = m_TankSM.Target.position - m_TankSM.transform.position;
-            lookPos.y = 0f;
-            var rot = Quaternion.LookRotation(lookPos);
-            m_TankSM.transform.rotation = Quaternion.Slerp(m_TankSM.transform.rotation, rot, m_TankSM.OrientSlerpScalar);
+            
         }
     }
 }
