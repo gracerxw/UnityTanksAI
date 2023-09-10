@@ -5,16 +5,16 @@ using Debug = UnityEngine.Debug;
 namespace CE6127.Tanks.AI
 {
     /// <summary>
-    /// Class <c>HidingState</c> represents the state of the tank when it is idle.
+    /// Class <c>RepositioningState</c> represents the state of the tank when it is idle.
     /// </summary>
-    internal class HidingState : BaseState
+    internal class RepositioningState : BaseState
     {
         private TankSM m_TankSM; // Reference to the tank state machine.
 
         /// <summary>
-        /// Constructor <c>HidingState</c> is the constructor of the class.
+        /// Constructor <c>RepositioningState</c> is the constructor of the class.
         /// </summary>
-        public HidingState(TankSM tankStateMachine) : base("Hiding", tankStateMachine) => m_TankSM = (TankSM)m_StateMachine;
+        public RepositioningState(TankSM tankStateMachine) : base("Repositioning", tankStateMachine) => m_TankSM = (TankSM)m_StateMachine;
 
         /// <summary>
         /// Method <c>Enter</c> is called when the state is entered.

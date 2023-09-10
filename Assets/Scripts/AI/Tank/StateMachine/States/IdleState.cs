@@ -32,15 +32,15 @@ namespace CE6127.Tanks.AI
             if (m_TankSM.Target != null)
             {
                 
-                m_TankSM.FaceTarget();
-                m_TankSM.UpdateDistanceToTarget();
+                m_TankSM.HyperAggression();
+                if (m_TankSM.isLowHealth){
+                    m_StateMachine.ChangeState(m_TankSM.m_States.Hiding);
+                    return;
+                }
 
                 // if not in range, switch to patrolling
                 if (m_TankSM.DistanceToTarget > m_TankSM.TargetDistance)
                     m_StateMachine.ChangeState(m_TankSM.m_States.Patrolling);
-                else {
-                    m_TankSM.AttackTarget();
-                }
             }
             
         }

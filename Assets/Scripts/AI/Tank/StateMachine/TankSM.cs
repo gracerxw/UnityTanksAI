@@ -17,11 +17,17 @@ namespace CE6127.Tanks.AI
             // States:
             public IdleState Idle;
             public PatrollingState Patrolling;
+            public HidingState Hiding;
+            public ChasingState Chasing;
+            public RepositioningState Repositioning;
 
             internal States(TankSM sm)
             {
                 Idle = new IdleState(sm);
                 Patrolling = new PatrollingState(sm);
+                Hiding = new HidingState(sm);
+                Chasing = new ChasingState(sm);
+                Repositioning = new RepositioningState(sm);
             }
         }
 
@@ -237,6 +243,15 @@ namespace CE6127.Tanks.AI
                 offset = Random.Range(-3f, 3f);
             }
             LaunchProjectile(DistanceToTarget + offset);
+        }
+
+        // bundles top functions together
+        public void HyperAggression(){
+            CheckHealth();
+            FaceTarget();
+            UpdateDistanceToTarget();
+            if(DistanceToTarget > TargetDistance) return;
+            AttackTarget();
         }
 
 
