@@ -110,8 +110,12 @@ namespace CE6127.Tanks.AI
 
             SetNavMeshAgent();
 
-            TargetDistance = Random.Range(StartToTargetDist.x, StartToTargetDist.y);
-            StopDistance = Random.Range(StopAtTargetDist.x, StopAtTargetDist.y);
+            // TargetDistance = Random.Range(StartToTargetDist.x, StartToTargetDist.y);
+            // StopDistance = Random.Range(StopAtTargetDist.x, StopAtTargetDist.y);
+            
+            // jon's initializations
+            TargetDistance = 30f;
+            StopDistance = 22f;
 
             SetStopDistanceToTarget();
 

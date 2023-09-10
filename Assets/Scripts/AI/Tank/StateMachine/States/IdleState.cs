@@ -28,9 +28,13 @@ namespace CE6127.Tanks.AI
         {
             base.Update();
 
+            // if there is a target
             if (m_TankSM.Target != null)
             {
+                // calculate distance to see if tank in range
                 var dist = Vector3.Distance(m_TankSM.transform.position, m_TankSM.Target.position);
+
+                // if not in range, switch to patrolling
                 if (dist > m_TankSM.TargetDistance)
                     m_StateMachine.ChangeState(m_TankSM.m_States.Patrolling);
                 // ... Just for demonstration purposes; more to be implemented.
