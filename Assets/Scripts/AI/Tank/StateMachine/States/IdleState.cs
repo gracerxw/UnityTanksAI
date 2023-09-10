@@ -37,13 +37,10 @@ namespace CE6127.Tanks.AI
                 // if not in range, switch to patrolling
                 if (dist > m_TankSM.TargetDistance)
                     m_StateMachine.ChangeState(m_TankSM.m_States.Patrolling);
-                else
-                    m_TankSM.LaunchProjectile();
-
-                // ... Just for demonstration purposes; more to be implemented.
-                
-                // testing - this should always launch projectile
-                // m_TankSM.LaunchProjectile();
+                else {
+                    // shoots properly using euclidean distance
+                    m_TankSM.LaunchProjectile(dist);
+                }
             }
 
             var lookPos = m_TankSM.Target.position - m_TankSM.transform.position;

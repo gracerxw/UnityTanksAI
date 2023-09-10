@@ -64,6 +64,7 @@ namespace CE6127.Tanks.AI
 
         public float ActualFireInterval; // my initialization
         public float ShotCooldown; // the current cooldown
+        public float DistanceToTarget; // self-explanatory...
 
 
 
@@ -193,10 +194,7 @@ namespace CE6127.Tanks.AI
             ShotCooldown -= Time.deltaTime;
             if(ShotCooldown > 0) return;
             ShotCooldown = ActualFireInterval;
-
-            launchForce = Mathf.Min(Mathf.Max(LaunchForceMinMax.x, launchForce), LaunchForceMinMax.y);
-
-
+            
             // Create an instance of the shell and store a reference to it's rigidbody.
             Rigidbody shellInstance = Instantiate(Shell, FireTransform.position, FireTransform.rotation) as Rigidbody;
 
