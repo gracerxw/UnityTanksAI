@@ -62,9 +62,15 @@ namespace CE6127.Tanks.AI
         // public AudioClip ShotChargingAudioClip;                  // Audio that plays when each shot is charging up.
         public AudioClip ShotFiringAudioClip;                       // Audio that plays when each shot is fired.
 
+        public float ActualFireInterval; // my initialization
+        public float ShotCooldown; // the current cooldown
+
+
+
         private bool m_Started = false; // Whether the tank has started moving.
         private Rigidbody m_Rigidbody;  // Reference used to the tank's regidbody.
         private TankSound m_TankSound;  // Reference used to play sound effects.
+
 
         /// <summary>
         /// Method <c>MoveTurnSound</c> returns the current tank's velocity.
@@ -116,6 +122,7 @@ namespace CE6127.Tanks.AI
             // jon's initializations
             TargetDistance = 30f;
             StopDistance = 22f;
+            ActualFireInterval = 0.7f;
 
             SetStopDistanceToTarget();
 
@@ -182,10 +189,13 @@ namespace CE6127.Tanks.AI
         /// </summary>
         public void LaunchProjectile(float launchForce = 1f)
         {
+            // makes sure that I respect the cooldown
+            ShotCooldown -= Time.deltaTime;
+            if(ShotCooldown > 0) return;
+            ShotCooldown = ActualFireInterval;
+
             launchForce = Mathf.Min(Mathf.Max(LaunchForceMinMax.x, launchForce), LaunchForceMinMax.y);
 
-            // Set the fired flag so only Fire is only called once.
-            // m_Fired = true;
 
             // Create an instance of the shell and store a reference to it's rigidbody.
             Rigidbody shellInstance = Instantiate(Shell, FireTransform.position, FireTransform.rotation) as Rigidbody;
