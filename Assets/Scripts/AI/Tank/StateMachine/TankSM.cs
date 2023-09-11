@@ -75,6 +75,9 @@ namespace CE6127.Tanks.AI
         public float DistanceToTarget; // self-explanatory...
         public bool isLowHealth = false;
         public TankHealth health;
+        public Vector3 targetLastSeen = new Vector3(-1,-1,-1);
+        public Vector3 defaultVector3 = new Vector3(-1,-1,-1);
+
 
         private bool m_Started = false; // Whether the tank has started moving.
         private Rigidbody m_Rigidbody;  // Reference used to the tank's regidbody.
