@@ -73,10 +73,16 @@ namespace CE6127.Tanks.AI
         public float ActualFireInterval; // my initialization
         public float ShotCooldown; // the current cooldown
         public float DistanceToTarget; // self-explanatory...
-        public bool isLowHealth = false;
-        public TankHealth health;
+        public bool isLowHealth = false; // indicator to move to HidingState
+        public TankHealth health; // reference to TankHealth
+        
+        // aids for patrolling
         public Vector3 targetLastSeen = new Vector3(-1,-1,-1);
         public Vector3 defaultVector3 = new Vector3(-1,-1,-1);
+
+        // for transition to RangeFinding State
+        public float minDistToPlayer = 28f;
+
 
 
         private bool m_Started = false; // Whether the tank has started moving.
@@ -245,6 +251,7 @@ namespace CE6127.Tanks.AI
         // FOR JOE
         // TODO: 
         // 1. launch target within constraints
+        // 1.5 If not within constraints just return
         // 2. Get appropriate angle + rotation
         // 3. Calculate appropriate force based on relative velocity + position
         public void AttackTarget(float offset = 0f){
@@ -256,16 +263,54 @@ namespace CE6127.Tanks.AI
             LaunchProjectile(DistanceToTarget + offset);
         }
 
+
+        // For JUSTIN
+        // TODO: Find if player tank is oriented to AI tank
+        // 1. Calculate rotation of player tank
+        // 2. Calculate the Vector3 between players
+        // 3. Check if within range + if the player tank is at the correct angle to attack
+        public bool IsUnderAttack(){
+            return false;
+        }
+
+
+        // For JUSTIN:
+        // TODO: If ally nearby, how to shift 
+        public void AvoidAlly(Vector3 allyPosition){
+            return;
+        }
+
+        // For JUSTIN:
+        // TODO: If tank under attack, how to shift 
+        public void AvoidEnemy(){
+            // you can grab the enemy target position and rotation using the `Target` Variable.
+            return;
+        }
+
+
+        // For JON (for Repositioning Class)
+        // TODO: check if an ally is within radius and skeet away
+        public bool IsAllyInRadius(){
+            return false;
+        }
+
+
+        // For GRACE: 
+        // TODO: check if there is an environment obstacle / ally tank that will block the shot to enemy
+        public bool IsObstructionPresent(){
+            return false;
+        }
+
+
+
         // bundles top functions together
         public void HyperAggression(){
             CheckHealth();
             UpdateDistanceToTarget();
             if(DistanceToTarget > TargetDistance) return;
             FaceTarget();
+            if(IsObstructionPresent()) return;
             AttackTarget();
         }
-
-
-        
     }
 }

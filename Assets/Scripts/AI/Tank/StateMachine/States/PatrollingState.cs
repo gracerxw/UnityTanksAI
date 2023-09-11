@@ -46,9 +46,17 @@ namespace CE6127.Tanks.AI
             }
 
             // if enemy within range, start chasing
-            if (m_TankSM.DistanceToTarget <= m_TankSM.TargetDistance)
+            if (m_TankSM.DistanceToTarget <= m_TankSM.TargetDistance){
                 m_TankSM.targetLastSeen = m_TankSM.Target.position;
                 m_StateMachine.ChangeState(m_TankSM.m_States.Chasing);
+                return;
+            }
+
+            if (m_TankSM.IsAllyInRadius()){
+                m_StateMachine.ChangeState(m_TankSM.m_States.Repositioning);
+                return;
+            }
+
 
 
             // update patrolling destination
@@ -76,9 +84,8 @@ namespace CE6127.Tanks.AI
         {
             while (true)
             {
-                
                 var patrolOffset = Random.insideUnitCircle * Random.Range(m_TankSM.PatrolMaxDist.x, m_TankSM.PatrolMaxDist.y);
-                var vectorOffset = new Vector3(patrolOffset.x, 0f, patrolOffset.y)
+                var vectorOffset = new Vector3(patrolOffset.x, 0f, patrolOffset.y);
 
                 // if don't have last seen
                 if(m_TankSM.targetLastSeen == m_TankSM.defaultVector3){
