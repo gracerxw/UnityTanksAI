@@ -1,10 +1,30 @@
 # 23s1-ce6127-tanks-ai-2022-3-4f1
 
-- [ X ] Refactor IdleState
-- [ ] Refactor PatrollingState
-- [ X ] Set up ChasingState class barebones
-- [ X ] Set up HidingState class barebones
-- [ X ] Set up RepositioningState class barebones
+- [X] Refactor IdleState
+- [X] Set up ChasingState class barebones
+- [X] Set up HidingState class barebones
+- [X] Set up RepositioningState class barebones
+- [X] Set up EvadingState class barebones
+- [X] Set up RangeFindingState class barebones
+
+## Actual Responsibilities
+
+### Joe
+- [ ] Predictive firing based on velocity and relative position
+
+### Jon
+- [ ] Finish `PatrollingState`
+- [ ] Finish `ChasingState`
+
+### Grace
+- [ ] Finish `RangeFindingState`
+
+### Justin
+- [ ] Finish `EvadingState`
+
+
+---
+### jon's old stuff
 - [ ] Set up function to move to target
 - [ ] Set up function to calculate offset for target firing
 - [ ] From any state: Check if tank is lowhealth -> transition to HidingState
