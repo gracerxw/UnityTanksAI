@@ -29,6 +29,8 @@ namespace CE6127.Tanks.AI
             base.Update();
             m_TankSM.HyperAggression();
 
+            Debug.Log("In Chasing State");
+
 
             // if low health, move to hiding
             if (m_TankSM.isLowHealth){

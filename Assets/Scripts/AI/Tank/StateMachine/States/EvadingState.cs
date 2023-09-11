@@ -29,9 +29,9 @@ namespace CE6127.Tanks.AI
             base.Update();
             m_TankSM.HyperAggression();
 
-            // try to move away from Player
-            // or move to good waypoints
-            // TODO HERE
+            Debug.Log("In Evading State");
+
+            // Go Justin!
         }
     }
 }

@@ -39,6 +39,8 @@ namespace CE6127.Tanks.AI
             base.Update();
             m_TankSM.HyperAggression();
 
+            Debug.Log("In Patrolling State");
+
             // if low health, move to hiding
             if (m_TankSM.isLowHealth){
                 m_StateMachine.ChangeState(m_TankSM.m_States.Hiding);
