@@ -91,7 +91,7 @@ namespace CE6127.Tanks.AI
         /// <summary>
         /// Method <c>GetInitialState</c> returns the initial state of the state machine.
         /// </summary>
-        protected override BaseState GetInitialState() => m_States.Idle;
+        protected override BaseState GetInitialState() => m_States.Patrolling;
 
         /// <summary>
         /// Method <c>SetNavMeshAgent</c> sets the NavMeshAgent's speed and angular speed.
@@ -240,6 +240,12 @@ namespace CE6127.Tanks.AI
             DistanceToTarget = Vector3.Distance(this.transform.position, Target.position);
         }
 
+
+        // FOR JOE
+        // TODO: 
+        // 1. launch target within constraints
+        // 2. Get appropriate angle + rotation
+        // 3. Calculate appropriate force based on relative velocity + position
         public void AttackTarget(float offset = 0f){
             // offset because the tanks will be in motion, 
             // to refine: can calculate whether the target is moving away + whether you are moving closer
@@ -252,9 +258,9 @@ namespace CE6127.Tanks.AI
         // bundles top functions together
         public void HyperAggression(){
             CheckHealth();
-            FaceTarget();
             UpdateDistanceToTarget();
             if(DistanceToTarget > TargetDistance) return;
+            FaceTarget();
             AttackTarget();
         }
 
