@@ -15,7 +15,6 @@ namespace CE6127.Tanks.AI
         protected internal struct States
         {
             // States:
-            public IdleState Idle;
             public PatrollingState Patrolling;
             public HidingState Hiding;
             public ChasingState Chasing;
@@ -25,7 +24,6 @@ namespace CE6127.Tanks.AI
 
             internal States(TankSM sm)
             {
-                Idle = new IdleState(sm);
                 Patrolling = new PatrollingState(sm);
                 Hiding = new HidingState(sm);
                 Chasing = new ChasingState(sm);
