@@ -20,6 +20,8 @@ namespace CE6127.Tanks.AI
             public HidingState Hiding;
             public ChasingState Chasing;
             public RepositioningState Repositioning;
+            public RangeFindingState RangeFinding;
+            public EvadingState Evading;
 
             internal States(TankSM sm)
             {
@@ -28,6 +30,8 @@ namespace CE6127.Tanks.AI
                 Hiding = new HidingState(sm);
                 Chasing = new ChasingState(sm);
                 Repositioning = new RepositioningState(sm);
+                Evading = new EvadingState(sm);
+                RangeFinding = new RangeFindingState(sm);
             }
         }
 

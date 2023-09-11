@@ -72,7 +72,7 @@ namespace CE6127.Tanks.AI
                 m_Destination = m_TankSM.transform.position + new Vector3(destination.x, 0f, destination.y);
                 float waitInSec = Random.Range(m_TankSM.PatrolWaitTime.x, m_TankSM.PatrolWaitTime.y);
                 
-                m_Destination = m_TankSM.Target.position;
+                // m_Destination = m_TankSM.Target.position;
                 yield return new WaitForSeconds(waitInSec);
             }
         }
