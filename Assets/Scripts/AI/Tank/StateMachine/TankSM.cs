@@ -15,13 +15,21 @@ namespace CE6127.Tanks.AI
         protected internal struct States
         {
             // States:
-            public IdleState Idle;
             public PatrollingState Patrolling;
+            public HidingState Hiding;
+            public ChasingState Chasing;
+            public RepositioningState Repositioning;
+            public RangeFindingState RangeFinding;
+            public EvadingState Evading;
 
             internal States(TankSM sm)
             {
-                Idle = new IdleState(sm);
                 Patrolling = new PatrollingState(sm);
+                Hiding = new HidingState(sm);
+                Chasing = new ChasingState(sm);
+                Repositioning = new RepositioningState(sm);
+                Evading = new EvadingState(sm);
+                RangeFinding = new RangeFindingState(sm);
             }
         }
 
@@ -62,9 +70,16 @@ namespace CE6127.Tanks.AI
         // public AudioClip ShotChargingAudioClip;                  // Audio that plays when each shot is charging up.
         public AudioClip ShotFiringAudioClip;                       // Audio that plays when each shot is fired.
 
+        public float ActualFireInterval; // my initialization
+        public float ShotCooldown; // the current cooldown
+        public float DistanceToTarget; // self-explanatory...
+        public bool isLowHealth = false;
+        public TankHealth health;
+
         private bool m_Started = false; // Whether the tank has started moving.
         private Rigidbody m_Rigidbody;  // Reference used to the tank's regidbody.
         private TankSound m_TankSound;  // Reference used to play sound effects.
+
 
         /// <summary>
         /// Method <c>MoveTurnSound</c> returns the current tank's velocity.
@@ -74,7 +89,7 @@ namespace CE6127.Tanks.AI
         /// <summary>
         /// Method <c>GetInitialState</c> returns the initial state of the state machine.
         /// </summary>
-        protected override BaseState GetInitialState() => m_States.Idle;
+        protected override BaseState GetInitialState() => m_States.Patrolling;
 
         /// <summary>
         /// Method <c>SetNavMeshAgent</c> sets the NavMeshAgent's speed and angular speed.
@@ -110,8 +125,14 @@ namespace CE6127.Tanks.AI
 
             SetNavMeshAgent();
 
-            TargetDistance = Random.Range(StartToTargetDist.x, StartToTargetDist.y);
-            StopDistance = Random.Range(StopAtTargetDist.x, StopAtTargetDist.y);
+            // TargetDistance = Random.Range(StartToTargetDist.x, StartToTargetDist.y);
+            // StopDistance = Random.Range(StopAtTargetDist.x, StopAtTargetDist.y);
+            
+            // jon's initializations
+            TargetDistance = 35f; // i set to max, tank better at long range, don't need space to hold
+            StopDistance = 22f;
+            ActualFireInterval = 0.7f;
+            health = GetComponent<TankHealth>();
 
             SetStopDistanceToTarget();
 
@@ -178,10 +199,10 @@ namespace CE6127.Tanks.AI
         /// </summary>
         public void LaunchProjectile(float launchForce = 1f)
         {
-            launchForce = Mathf.Min(Mathf.Max(LaunchForceMinMax.x, launchForce), LaunchForceMinMax.y);
-
-            // Set the fired flag so only Fire is only called once.
-            // m_Fired = true;
+            // makes sure that I respect the cooldown
+            ShotCooldown -= Time.deltaTime;
+            if(ShotCooldown > 0) return;
+            ShotCooldown = ActualFireInterval;
 
             // Create an instance of the shell and store a reference to it's rigidbody.
             Rigidbody shellInstance = Instantiate(Shell, FireTransform.position, FireTransform.rotation) as Rigidbody;
@@ -193,5 +214,55 @@ namespace CE6127.Tanks.AI
             SFXAudioSource.clip = ShotFiringAudioClip;
             SFXAudioSource.Play();
         }
+
+
+        // function to be called every update to transition to Hiding State
+        public void CheckHealth(){
+            if(isLowHealth) return;
+            
+            // based on max damage in ShellExplosion -> find a way to grab this dynamically
+            if(health.m_CurrentHealth < 12.5f)
+                isLowHealth = true;
+        }
+
+        // reorient to face the target
+        public void FaceTarget(){
+            var lookPos = Target.position - this.transform.position;
+            lookPos.y = 0f;
+            var rot = Quaternion.LookRotation(lookPos);
+            this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);
+        }
+
+        public void UpdateDistanceToTarget(){
+            if(Target == null) return;
+            DistanceToTarget = Vector3.Distance(this.transform.position, Target.position);
+        }
+
+
+        // FOR JOE
+        // TODO: 
+        // 1. launch target within constraints
+        // 2. Get appropriate angle + rotation
+        // 3. Calculate appropriate force based on relative velocity + position
+        public void AttackTarget(float offset = 0f){
+            // offset because the tanks will be in motion, 
+            // to refine: can calculate whether the target is moving away + whether you are moving closer
+            if(offset == 0f){
+                offset = Random.Range(-3f, 3f);
+            }
+            LaunchProjectile(DistanceToTarget + offset);
+        }
+
+        // bundles top functions together
+        public void HyperAggression(){
+            CheckHealth();
+            UpdateDistanceToTarget();
+            if(DistanceToTarget > TargetDistance) return;
+            FaceTarget();
+            AttackTarget();
+        }
+
+
+        
     }
 }

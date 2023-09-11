@@ -10,6 +10,7 @@ namespace CE6127.Tanks.AI
     public class StateMachine : MonoBehaviour
     {
         private BaseState m_CurrentState; // Current state.
+        private float timeInState; // time spent in this state
 
         /// <summary>
         /// Method <c>Start</c> initialization.
@@ -60,8 +61,14 @@ namespace CE6127.Tanks.AI
         {
             m_CurrentState?.Exit();
 
+            // don't make unnecessary calls
+            if(newState == m_CurrentState) return;
+
             m_CurrentState = newState;
             m_CurrentState.Enter();
         }
+
+
+
     }
 }
