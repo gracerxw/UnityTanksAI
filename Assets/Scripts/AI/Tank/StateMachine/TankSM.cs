@@ -81,7 +81,7 @@ namespace CE6127.Tanks.AI
         public Vector3 defaultVector3 = new Vector3(-1,-1,-1);
 
         // for transition to RangeFinding State
-        public float minDistToPlayer = 28f;
+        public float minDistToPlayer = 10f;
 
 
 
