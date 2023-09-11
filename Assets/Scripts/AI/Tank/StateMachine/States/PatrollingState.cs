@@ -39,6 +39,8 @@ namespace CE6127.Tanks.AI
             base.Update();
             m_TankSM.HyperAggression();
 
+            Debug.Log("In Patrolling State");
+
             // if low health, move to hiding
             if (m_TankSM.isLowHealth){
                 m_StateMachine.ChangeState(m_TankSM.m_States.Hiding);
@@ -46,8 +48,17 @@ namespace CE6127.Tanks.AI
             }
 
             // if enemy within range, start chasing
-            if (m_TankSM.DistanceToTarget <= m_TankSM.TargetDistance)
+            if (m_TankSM.DistanceToTarget <= m_TankSM.TargetDistance){
+                m_TankSM.targetLastSeen = m_TankSM.Target.position;
                 m_StateMachine.ChangeState(m_TankSM.m_States.Chasing);
+                return;
+            }
+
+            if (m_TankSM.IsAllyInRadius()){
+                m_StateMachine.ChangeState(m_TankSM.m_States.Repositioning);
+                return;
+            }
+
 
 
             // update patrolling destination
@@ -75,11 +86,18 @@ namespace CE6127.Tanks.AI
         {
             while (true)
             {
-                var destination = Random.insideUnitCircle * Random.Range(m_TankSM.PatrolMaxDist.x, m_TankSM.PatrolMaxDist.y);
-                m_Destination = m_TankSM.transform.position + new Vector3(destination.x, 0f, destination.y);
-                float waitInSec = Random.Range(m_TankSM.PatrolWaitTime.x, m_TankSM.PatrolWaitTime.y);
+                var patrolOffset = Random.insideUnitCircle * Random.Range(m_TankSM.PatrolMaxDist.x, m_TankSM.PatrolMaxDist.y);
+                var vectorOffset = new Vector3(patrolOffset.x, 0f, patrolOffset.y);
+
+                // if don't have last seen
+                if(m_TankSM.targetLastSeen == m_TankSM.defaultVector3){
+                    m_Destination = m_TankSM.transform.position + vectorOffset;
+                } else {
+                    // move to enemy last seen
+                    m_Destination = m_TankSM.targetLastSeen + vectorOffset;
+                }
                 
-                // m_Destination = m_TankSM.Target.position;
+                float waitInSec = Random.Range(m_TankSM.PatrolWaitTime.x, m_TankSM.PatrolWaitTime.y);
                 yield return new WaitForSeconds(waitInSec);
             }
         }
