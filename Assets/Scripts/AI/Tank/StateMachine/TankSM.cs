@@ -83,6 +83,12 @@ namespace CE6127.Tanks.AI
         // for transition to RangeFinding State
         public float minDistToPlayer = 10f;
 
+        // for target tracking
+        public float TrackCooldown;
+        public float ActualTrackInterval;
+        public Vector3 TargetStoredPos =new Vector3(-1,-1,-1);
+        private Vector3 barrelOffset;
+        public float ShellVel;
 
 
         private bool m_Started = false; // Whether the tank has started moving.
@@ -143,6 +149,9 @@ namespace CE6127.Tanks.AI
             ActualFireInterval = 0.7f;
             health = GetComponent<TankHealth>();
 
+            //joe's initializations
+            TrackCooldown=1.0f;
+            barrelOffset= new Vector3(FireTransform.position.x-transform.position.x,transform.position.y,FireTransform.position.z-transform.position.z);//barrel offset vector from tank
             SetStopDistanceToTarget();
 
             var tankManagers = GameManager.PlayerPlatoon.Tanks.Take(1);
@@ -202,7 +211,13 @@ namespace CE6127.Tanks.AI
                 StopAllCoroutines();
             }
         }
-
+        private new void LateUpdate()
+        {
+            TrackCooldown -= Time.deltaTime;
+            if(TrackCooldown > 0) return;
+            TrackCooldown = ActualTrackInterval;
+            TargetStoredPos = Target.position;  
+        }
         /// <summary>
         /// Method <c>LaunchProjectile</c> instantiate and launch the shell.
         /// </summary>
@@ -235,13 +250,13 @@ namespace CE6127.Tanks.AI
         }
 
         // reorient to face the target
-        public void FaceTarget(){
+      /*  public void FaceTarget(){
             var lookPos = Target.position - this.transform.position;
             lookPos.y = 0f;
             var rot = Quaternion.LookRotation(lookPos);
             this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);
         }
-
+*/
         public void UpdateDistanceToTarget(){
             if(Target == null) return;
             DistanceToTarget = Vector3.Distance(this.transform.position, Target.position);
@@ -254,13 +269,40 @@ namespace CE6127.Tanks.AI
         // 1.5 If not within constraints just return
         // 2. Get appropriate angle + rotation
         // 3. Calculate appropriate force based on relative velocity + position
+
+        public void TargetPrediction(){
+            if(Target == null) return;
+            var tDir = Vector3.Normalize(Target.position - TargetStoredPos); //unit vector for tank direction
+            Debug.DrawRay(Target.position, tDir*(GameManager.Speed*Time.deltaTime),Color.green,3);
+            float approxFlightTime =Mathf.Sqrt(2*((1.7f + DistanceToTarget*Mathf.Tan(10*Mathf.PI/180))/9.81f));//approximate flight time of shell based on current dist to player tank
+            float approxtargetTravel = GameManager.Speed*approxFlightTime;// travel of player tank in the approx flight time of the shell
+
+            float PrecisionDistToTarget = Vector3.Distance(this.transform.position+barrelOffset, Target.position + tDir*approxtargetTravel); //recalculate a more accurate dist from barrel to predicted location
+            float FlightTime = Mathf.Sqrt(2*((1.7f + PrecisionDistToTarget*Mathf.Tan(10*Mathf.PI/180))/9.81f));//recalculate flight time with accurate distance
+            ShellVel = PrecisionDistToTarget/(FlightTime*Mathf.Cos(10*Mathf.PI/180));
+            if (ShellVel < LaunchForceMinMax.x)
+            {
+                ShellVel = LaunchForceMinMax.x;
+            }
+            else if (ShellVel > LaunchForceMinMax.y)
+            {
+                ShellVel = LaunchForceMinMax.y;
+            }
+            var lookPos = Target.position + approxtargetTravel*tDir - this.transform.position;
+            lookPos.y = 0f;
+            var rot = Quaternion.LookRotation(lookPos);
+            this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);
+            Debug.DrawRay(Target.position, tDir*approxtargetTravel,Color.red,3);
+            Debug.Log(ShellVel);
+        }    
         public void AttackTarget(float offset = 0f){
             // offset because the tanks will be in motion, 
             // to refine: can calculate whether the target is moving away + whether you are moving closer
             if(offset == 0f){
                 offset = Random.Range(-3f, 3f);
             }
-            LaunchProjectile(DistanceToTarget + offset);
+            TargetPrediction();
+            LaunchProjectile(ShellVel);
         }
 
 
@@ -308,7 +350,8 @@ namespace CE6127.Tanks.AI
             CheckHealth();
             UpdateDistanceToTarget();
             if(DistanceToTarget > TargetDistance) return;
-            FaceTarget();
+            //FaceTarget();
+            TargetPrediction();
             if(IsObstructionPresent()) return;
             AttackTarget();
         }
