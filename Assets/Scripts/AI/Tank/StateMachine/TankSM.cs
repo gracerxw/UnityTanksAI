@@ -83,6 +83,12 @@ namespace CE6127.Tanks.AI
         // for transition to RangeFinding State
         public float minDistToPlayer = 10f;
 
+        // for target tracking
+        // [HideInInspector] public float TrackCooldown;
+        // public float ActualTrackInterval = 0.5f;
+        // [HideInInspector] public Vector3 TargetStoredPos = new Vector3(-1,-1,-1);
+        // [HideInInspector] private Vector3 barrelOffset;
+        // [HideInInspector] public float ShellVel;
 
 
         private bool m_Started = false; // Whether the tank has started moving.
@@ -142,6 +148,9 @@ namespace CE6127.Tanks.AI
             StopDistance = 22f;
             ActualFireInterval = 0.7f;
             health = GetComponent<TankHealth>();
+
+            //joe's initializations
+            // barrelOffset= new Vector3(FireTransform.position.x-transform.position.x,transform.position.y,FireTransform.position.z-transform.position.z); //barrel offset vector from tank
 
             SetStopDistanceToTarget();
 
@@ -254,12 +263,40 @@ namespace CE6127.Tanks.AI
         // 1.5 If not within constraints just return
         // 2. Get appropriate angle + rotation
         // 3. Calculate appropriate force based on relative velocity + position
+
+        // public void TargetPrediction(){
+        //     if(Target == null) return;
+        //     var tDir = Vector3.Normalize(Target.position - TargetStoredPos); //unit vector for tank direction
+        //     //Debug.DrawRay(Target.position, tDir*(GameManager.Speed*Time.deltaTime),Color.green,3);
+        //     float approxFlightTime =Mathf.Sqrt(2*((1.7f + DistanceToTarget*Mathf.Tan(10*Mathf.PI/180))/9.81f));//approximate flight time of shell based on current dist to player tank
+        //     float approxtargetTravel = GameManager.Speed*approxFlightTime;// travel of player tank in the approx flight time of the shell
+
+        //     float PrecisionDistToTarget = Vector3.Distance(this.transform.position+barrelOffset, Target.position + tDir*approxtargetTravel); //recalculate a more accurate dist from barrel to predicted location
+        //     float FlightTime = Mathf.Sqrt(2*((1.7f + PrecisionDistToTarget*Mathf.Tan(10*Mathf.PI/180))/9.81f));//recalculate flight time with accurate distance
+        //     ShellVel = PrecisionDistToTarget/(FlightTime*Mathf.Cos(10*Mathf.PI/180));//calculate shell velocity based on precise fistance
+        //     if (ShellVel < LaunchForceMinMax.x) //if below min shell velocity set to min
+        //     {
+        //         ShellVel = LaunchForceMinMax.x;
+        //     }
+        //     else if (ShellVel > LaunchForceMinMax.y) //if above max shell velocity set to max
+        //     {
+        //         ShellVel = LaunchForceMinMax.y;
+        //     }
+        //     var lookPos = Target.position + approxtargetTravel*tDir - this.transform.position;//set look position to the predicted point in front of player
+        //     lookPos.y = 0f;
+        //     var rot = Quaternion.LookRotation(lookPos); //turn to face look position
+        //     this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);
+        //     //Debug.DrawRay(Target.position, tDir*approxtargetTravel,Color.red,3);
+        //     //Debug.Log(ShellVel);
+        // }    
         public void AttackTarget(float offset = 0f){
             // offset because the tanks will be in motion, 
             // to refine: can calculate whether the target is moving away + whether you are moving closer
             if(offset == 0f){
                 offset = Random.Range(-3f, 3f);
             }
+            // TargetPrediction();
+            // LaunchProjectile(ShellVel);
             LaunchProjectile(DistanceToTarget + offset);
         }
 
@@ -298,8 +335,15 @@ namespace CE6127.Tanks.AI
         // For GRACE: 
         // TODO: check if there is an environment obstacle / ally tank that will block the shot to enemy
         public bool IsObstructionPresent(){
-            return false;
+            NavMeshHit hit;
+            // return NavMeshAgent.Raycast(Target.position, out hit); // v simplistic straight line from AI tank to target, rly dont shoot if sth in sight, q sensitive 
+            // return NavMesh.Raycast(FireTransform.position, Target.position, out hit, NavMesh.AllAreas); // FireTransform is where shells are spawned
+            // this somehow works best altho is not FireTransform, but still buggy in the sense if cant shoot, also dont move (ref thoughts below)
+            return NavMesh.Raycast(this.transform.position, Target.position, out hit, NavMesh.AllAreas); // should be same as NavMeshAgent line but results seems diff
+            // return false;
         }
+        // Thoughts: reorientate / find path / chase target so that no obstruction and can shoot
+        // else will just be stuck there (cos in HyperAggression, will only return)
 
 
 
