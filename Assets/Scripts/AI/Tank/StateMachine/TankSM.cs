@@ -313,15 +313,14 @@ namespace CE6127.Tanks.AI
             tDir = Vector3.Normalize(Target.position - TargetStoredPos); //unit vector for tank direction
             
             //Debug.DrawRay(Target.position, tDir*(GameManager.Speed*Time.deltaTime),Color.green,3);
-            float approxFlightTime =Mathf.Sqrt(2*((1.7f + DistanceToTarget*Mathf.Tan(10*Mathf.PI/180))/9.81f));//approximate flight time of shell based on current dist to player tank
-            Debug.Log("approx" + approxFlightTime);
-            approxtargetTravel = GameManager.Speed*approxFlightTime;// travel of player tank in the approx flight time of the shell
+            float PrecisionDistToTarget = Vector3.Distance(this.transform.position+transform.forward*barrelOffset, Target.position + tDir*GameManager.Speed*shotLeadFactor);
+            //estimate of dist from barrel to predictive shot location
+            float FlightTime =Mathf.Sqrt(2*((1.7f + DistanceToTarget*Mathf.Tan(10*Mathf.PI/180))/9.81f));//approximate flight time of shell based on current dist to player tank
 
-            float PrecisionDistToTarget = Vector3.Distance(this.transform.position+transform.forward*barrelOffset, Target.position + tDir*approxtargetTravel*shotLeadFactor); 
-            //recalculate a more accurate dist from barrel to predicted location
-            float FlightTime = Mathf.Sqrt(2*((1.7f + PrecisionDistToTarget*Mathf.Tan(10*Mathf.PI/180))/9.81f));//recalculate flight time with accurate distance
+            approxtargetTravel = GameManager.Speed*FlightTime;// travel of player tank in the approx flight time of the shell
+
             ShellVel = PrecisionDistToTarget/(FlightTime*Mathf.Cos(10*Mathf.PI/180));//calculate shell velocity based on precise distance
-            Debug.Log("prec" + FlightTime);
+
             if (ShellVel < LaunchForceMinMax.x) //if below min shell velocity set to min
             {
                 ShellVel = LaunchForceMinMax.x;
@@ -331,20 +330,13 @@ namespace CE6127.Tanks.AI
                 ShellVel = LaunchForceMinMax.y;
             }
 
-            //var lookPos = Target.position + approxtargetTravel*tDir*shotLeadFactor - this.transform.position;//set look position to the predicted point in front of player
-            //lookPos.y = 0f;
-            //var rot = Quaternion.LookRotation(lookPos); //turn to face look position
-            //this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);//turn at maximum turn rate
-            //Debug.DrawRay(Target.position, tDir*approxtargetTravel,Color.red,3);
-            //Debug.DrawRay(Target.position,Target.transform.forward*10,Color.green,3);
-            //Debug.Log(ShellVel);
         }    
         public void Aim()
         {
             var lookPos = Target.position + approxtargetTravel*tDir*shotLeadFactor - this.transform.position;//set look position to the predicted point in front of player
             lookPos.y = 0f;
             var rot = Quaternion.LookRotation(lookPos); //turn to face look position
-            this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);
+            this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);//turn at maximum turn rate
         }
         public void AttackTarget(float offset = 0f){
             // offset because the tanks will be in motion, 
