@@ -85,11 +85,23 @@ namespace CE6127.Tanks.AI
 
         // for target tracking
         [HideInInspector] public float TrackCooldown;
-        public float ActualTrackInterval=0.5f;
-        [HideInInspector] public Vector3 TargetStoredPos =new Vector3(-1,-1,-1);
-        [HideInInspector] private Vector3 barrelOffset;
-        [HideInInspector] public float ShellVel;
+        public float ActualTrackInterval=0.1f; //set interval in seconds to track current position of player tank
+        public float Wigglefactor = 10f;// set multiplication factor for the slow player position update that will be used to check if they are wiggling to throw off our predictive aim
+        private float WiggleTrackInterval; //interval between slow position updates
+        private float WiggleCooldown;//current time left between slow position updates
+        public float mstrShotLeadFactor = 1.05f; //multiplication factor to determine how far in front of the tanks direction to shoot
+        [HideInInspector] public float shotLeadFactor; //current shot lead factor
+        [HideInInspector] public Vector3 TargetStoredPos =new Vector3(-1,-1,-1);//stored location of player tank updated every ActualTrackInterval period
+        [HideInInspector] public Vector3 NewSlowTargetStoredPos =new Vector3(-1,-1,-1);//slow stored location updated every WiggleTrackInterval period
+        [HideInInspector] public Vector3 ActiveSlowTargetStoredPos =new Vector3(-1,-1,-1); //current active stored position updated to the new slow position every
+        //WiggleTrackInterval so it lags the actual position of the player tank allowing for detection of if they are just wiggling back and forth to throw off predictive aiming
+        [HideInInspector] private Vector3 barrelPosition;//offset position of barrel from center of tank
+        private float barrelOffset;
+        [HideInInspector] public float ShellVel;//shell velocity
 
+          private float approxtargetTravel;
+
+        private Vector3 tDir;
 
         private bool m_Started = false; // Whether the tank has started moving.
         private Rigidbody m_Rigidbody;  // Reference used to the tank's regidbody.
@@ -150,10 +162,14 @@ namespace CE6127.Tanks.AI
             health = GetComponent<TankHealth>();
 
             //joe's initializations
-            barrelOffset= new Vector3(FireTransform.position.x-transform.position.x,transform.position.y,FireTransform.position.z-transform.position.z);//barrel offset vector from tank
-            
-            SetStopDistanceToTarget();
+            barrelPosition= new Vector3(FireTransform.position.x,transform.position.y,FireTransform.position.z);
+            barrelOffset = Vector3.Magnitude(transform.position - FireTransform.position);
+            //barrel offset vector from tank
+            WiggleTrackInterval=ActualTrackInterval*Wigglefactor;
+            WiggleCooldown = WiggleTrackInterval;
+            shotLeadFactor = mstrShotLeadFactor;
 
+            SetStopDistanceToTarget();
             var tankManagers = GameManager.PlayerPlatoon.Tanks.Take(1);
             if (tankManagers.Count() != 0)
                 Target = tankManagers.First().Instance.transform;
@@ -213,10 +229,20 @@ namespace CE6127.Tanks.AI
         }
         private new void LateUpdate()
         {
-            TrackCooldown -= Time.deltaTime;
-            if(TrackCooldown > 0) return;
-            TrackCooldown = ActualTrackInterval;
-            TargetStoredPos = Target.position;  
+            TrackCooldown -= Time.deltaTime;// countdown time from last track update
+            WiggleCooldown -= Time.deltaTime; //countdown time from last slow track update
+            if(TrackCooldown > 0) return; //if time elapsed from last update not greater than track interval do nothing
+            TrackCooldown = ActualTrackInterval;//reset cooldown
+            TargetStoredPos = Target.position; //update track position
+         
+           
+            if(WiggleCooldown > 0) return;//if time elapsed from last slow update not greater than track interval do nothing
+            WiggleCooldown = WiggleTrackInterval;//reset slow cooldown
+            //Debug.Log("dist" + Vector3.Magnitude(Target.position - ActiveSlowTargetStoredPos));
+            //Debug.Log("control" + GameManager.Speed*WiggleTrackInterval);
+
+            ActiveSlowTargetStoredPos = NewSlowTargetStoredPos;//update active slow position to the new position from previous update
+            NewSlowTargetStoredPos = Target.position;//update new slow position to player tank current location
         }
         /// <summary>
         /// Method <c>LaunchProjectile</c> instantiate and launch the shell.
@@ -271,15 +297,31 @@ namespace CE6127.Tanks.AI
         // 3. Calculate appropriate force based on relative velocity + position
 
         public void TargetPrediction(){
-            if(Target == null) return;
-            var tDir = Vector3.Normalize(Target.position - TargetStoredPos); //unit vector for tank direction
+            if(Target == null) return; //if no target do nothing
+
+            if(Vector3.Magnitude(Target.position - ActiveSlowTargetStoredPos) < GameManager.Speed*WiggleTrackInterval*0.6f)//if the distance of the tank from the lagged slow
+            //position is less than 0.6 of the expected value if the tank were going at full speed in a straight line
+            {
+                shotLeadFactor = mstrShotLeadFactor*0.0f;//set shot lead factor low to hit the player tank even if wiggling
+                //Debug.Log(Vector3.Magnitude(Target.position - ActiveSlowTargetStoredPos) + "wiggle detected - adjusting range");
+            }
+            else
+            {
+                shotLeadFactor = mstrShotLeadFactor;//set shot lead factor to the master value
+                //Debug.Log(Vector3.Magnitude(Target.position - ActiveSlowTargetStoredPos) + "Normal engagement speed");
+            }
+            tDir = Vector3.Normalize(Target.position - TargetStoredPos); //unit vector for tank direction
+            
             //Debug.DrawRay(Target.position, tDir*(GameManager.Speed*Time.deltaTime),Color.green,3);
             float approxFlightTime =Mathf.Sqrt(2*((1.7f + DistanceToTarget*Mathf.Tan(10*Mathf.PI/180))/9.81f));//approximate flight time of shell based on current dist to player tank
-            float approxtargetTravel = GameManager.Speed*approxFlightTime;// travel of player tank in the approx flight time of the shell
+            Debug.Log("approx" + approxFlightTime);
+            approxtargetTravel = GameManager.Speed*approxFlightTime;// travel of player tank in the approx flight time of the shell
 
-            float PrecisionDistToTarget = Vector3.Distance(this.transform.position+barrelOffset, Target.position + tDir*approxtargetTravel); //recalculate a more accurate dist from barrel to predicted location
+            float PrecisionDistToTarget = Vector3.Distance(this.transform.position+transform.forward*barrelOffset, Target.position + tDir*approxtargetTravel*shotLeadFactor); 
+            //recalculate a more accurate dist from barrel to predicted location
             float FlightTime = Mathf.Sqrt(2*((1.7f + PrecisionDistToTarget*Mathf.Tan(10*Mathf.PI/180))/9.81f));//recalculate flight time with accurate distance
-            ShellVel = PrecisionDistToTarget/(FlightTime*Mathf.Cos(10*Mathf.PI/180));//calculate shell velocity based on precise fistance
+            ShellVel = PrecisionDistToTarget/(FlightTime*Mathf.Cos(10*Mathf.PI/180));//calculate shell velocity based on precise distance
+            Debug.Log("prec" + FlightTime);
             if (ShellVel < LaunchForceMinMax.x) //if below min shell velocity set to min
             {
                 ShellVel = LaunchForceMinMax.x;
@@ -288,20 +330,28 @@ namespace CE6127.Tanks.AI
             {
                 ShellVel = LaunchForceMinMax.y;
             }
-            var lookPos = Target.position + approxtargetTravel*tDir - this.transform.position;//set look position to the predicted point in front of player
+
+            //var lookPos = Target.position + approxtargetTravel*tDir*shotLeadFactor - this.transform.position;//set look position to the predicted point in front of player
+            //lookPos.y = 0f;
+            //var rot = Quaternion.LookRotation(lookPos); //turn to face look position
+            //this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);//turn at maximum turn rate
+            //Debug.DrawRay(Target.position, tDir*approxtargetTravel,Color.red,3);
+            //Debug.DrawRay(Target.position,Target.transform.forward*10,Color.green,3);
+            //Debug.Log(ShellVel);
+        }    
+        public void Aim()
+        {
+            var lookPos = Target.position + approxtargetTravel*tDir*shotLeadFactor - this.transform.position;//set look position to the predicted point in front of player
             lookPos.y = 0f;
             var rot = Quaternion.LookRotation(lookPos); //turn to face look position
             this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);
-            //Debug.DrawRay(Target.position, tDir*approxtargetTravel,Color.red,3);
-            //Debug.Log(ShellVel);
-        }    
+        }
         public void AttackTarget(float offset = 0f){
             // offset because the tanks will be in motion, 
             // to refine: can calculate whether the target is moving away + whether you are moving closer
-            if(offset == 0f){
-                offset = Random.Range(-3f, 3f);
-            }
-            TargetPrediction();
+           // if(offset == 0f){
+             //   offset = Random.Range(-3f, 3f);
+            //}
             LaunchProjectile(ShellVel);
         }
 
@@ -351,7 +401,9 @@ namespace CE6127.Tanks.AI
             UpdateDistanceToTarget();
             if(DistanceToTarget > TargetDistance) return;
             //FaceTarget();
+            
             TargetPrediction();
+            Aim();
             if(IsObstructionPresent()) return;
             AttackTarget();
         }
