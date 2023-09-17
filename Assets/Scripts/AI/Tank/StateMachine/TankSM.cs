@@ -335,16 +335,111 @@ namespace CE6127.Tanks.AI
         // For GRACE: 
         // TODO: check if there is an environment obstacle / ally tank that will block the shot to enemy
         public bool IsObstructionPresent(){
-            NavMeshHit hit;
+            
+            // Attempt 1: Simple solution
+
+            // NavMeshHit hit;
             // return NavMeshAgent.Raycast(Target.position, out hit); // v simplistic straight line from AI tank to target, rly dont shoot if sth in sight, q sensitive 
+            // this works best, but still buggy in the sense if cant shoot, also dont move (ref thoughts below)
             // return NavMesh.Raycast(FireTransform.position, Target.position, out hit, NavMesh.AllAreas); // FireTransform is where shells are spawned
-            // this somehow works best altho is not FireTransform, but still buggy in the sense if cant shoot, also dont move (ref thoughts below)
-            return NavMesh.Raycast(this.transform.position, Target.position, out hit, NavMesh.AllAreas); // should be same as NavMeshAgent line but results seems diff
+            // return NavMesh.Raycast(this.transform.position, Target.position, out hit, NavMesh.AllAreas); // should be same as NavMeshAgent line but results seems diff
             // return false;
+
+
+            // Attempt 2: 
+            // attempt 1 but with improved ray source and destination + debugging code and layermask
+            // errors: 
+            // (1) 
+            // (2) hypersensitive to obstacles - detects obstacles altho by eye power seems like ray did not touch
+            // (3) ray is a straight line - lose firing opportunities if shell's trajectory actually flows over obstacles
+            
+            // NavMeshHit hit;
+            // bool blocked = false;
+            // Vector3 shell_destination = Target.position + new Vector3(0, FireTransform.position.y / 2, 0); // assign ray to middle top of tank
+            // // layer mask to only AI and default 
+            // int layermask_AI = 1 << 11; // 11 represents AI Tank layer 
+            // int layermask_default = 1 << 0; // 0 represents default layer where the background objects are 
+            // int layermask = layermask_AI | layermask_default;
+            
+            // blocked = NavMesh.Raycast(FireTransform.position, shell_destination, out hit, layermask); 
+            // Debug.DrawLine(FireTransform.position, shell_destination, blocked ? Color.red : Color.green);
+            // if (blocked)
+            // {
+            //     Debug.DrawRay(hit.position, Vector3.up, Color.red);
+            //     Debug.Log("Hit object position: " + hit.position + " in mask: " + + hit.mask + " by tank: " + this.transform.position);
+            // }
+            // return blocked;
+
+
+            // Attempt 2.2: 
+            // Physics.Linecast for only collidors(?)
+            // Physics.Raycast and Linecast is "less sensitive" (for colliders only) than NavMesh.Raycast (2.5D -> detect holes in ground etc)
+            // errors: 
+            // (1) terrain does not have exact colliders
+            // (2) ray is a straight line - lose firing opportunities if shell's trajectory actually flows over obstacles
+
+            bool blocked = false;
+            Vector3 shell_destination = Target.position + new Vector3(0, FireTransform.position.y / 2, 0); // assign ray to hit middle of tank (if hit top, can't detect low obstacles; bottom - may sense ground / v low dunes)
+            // layer mask to only AI and default 
+            int layermask_AI = 1 << 11; // 11 represents AI Tank layer 
+            int layermask_default = 1 << 0; // 0 represents default layer where the background objects are 
+            int layermask = layermask_AI | layermask_default;
+            
+            blocked = Physics.Linecast(FireTransform.position, shell_destination, out RaycastHit hitInfo, layermask);
+            Debug.DrawLine(FireTransform.position, shell_destination, blocked ? Color.red : Color.green);
+            if (blocked)
+            {
+                Debug.Log("Hit: " + hitInfo.transform.name + ". Collider: " + hitInfo.collider + ". By tank: " + this.transform.position);
+
+            }
+            return blocked;
+
+
+            // Attempt 3: 
+            // Curved Raycast following shell trajectory 
+            // errors: 
+            // (1) still shells some obstacles esp if obstacle is further away 
+            // (2) sometimes detects shells it releases (still in midair) as obstacles 
+
+            // bool blocked = false;
+            // int numSamples = 100; // Number of samples along the trajectory (NOTE: when numSamples = high, detect own shell that was previously released)
+            // float maxDistance = 100f; // Maximum distance to check for obstacles
+            // // *** TO BE CHANGED TO JOE'S PREDICTIVE LAUNCHFORCE instead of 1f *** 
+            // Vector3 initialVelocity = 1f * FireTransform.forward; // initial velocity 
+            // Vector3 shellVelocity = initialVelocity; 
+            // // layer mask to only AI and default 
+            // int layermask_AI = 1 << 11; // 11 represents AI Tank layer 
+            // int layermask_default = 1 << 0; // 0 represents default layer where the background objects are 
+            // int layermask = layermask_AI | layermask_default;
+
+            // // Calculate time step for trajectory sampling
+            // float timeStep = maxDistance / numSamples;
+
+            // for (float t = 0; t < maxDistance; t += timeStep)
+            // {
+                
+            //     // Calculate the position of the shell at time t
+            //     Vector3 shellPosition = FireTransform.position + initialVelocity * t + 0.5f * Physics.gravity * t * t;
+
+            //     // Create a ray from the shell's position to check for obstacles
+            //     Ray ray = new Ray(shellPosition, shellVelocity.normalized);
+
+            //     blocked = Physics.Raycast(ray, out RaycastHit hit, timeStep, layermask); 
+            //     Debug.DrawRay(FireTransform.position, shellVelocity.normalized * hit.distance, Color.blue);
+            //     // Check if the ray hits anything
+            //     if (blocked)
+            //     {
+            //         Debug.DrawRay(FireTransform.position, shellVelocity.normalized * hit.distance, Color.red);
+            //         Debug.Log("Hit object position: " + hit.transform.name + " by tank: " + this.transform.position); 
+            //         return blocked; 
+            //     }
+            //     // Update the current velocity based on gravity
+            //     shellVelocity += Physics.gravity * timeStep;
+            // }
+            // return blocked; 
         }
         // Thoughts: reorientate / find path / chase target so that no obstruction and can shoot
         // else will just be stuck there (cos in HyperAggression, will only return)
-
 
 
         // bundles top functions together
@@ -353,7 +448,7 @@ namespace CE6127.Tanks.AI
             UpdateDistanceToTarget();
             if(DistanceToTarget > TargetDistance) return;
             FaceTarget();
-            if(IsObstructionPresent()) return;
+            if(IsObstructionPresent()) return; // instead of return, have another function to rotate / find path to fire at target
             AttackTarget();
         }
     }
