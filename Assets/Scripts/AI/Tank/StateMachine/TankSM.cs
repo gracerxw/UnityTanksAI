@@ -93,7 +93,6 @@ namespace CE6127.Tanks.AI
         Vector3 evadeDirection = new Vector3(0.0f, 0.0f, 0.0f);
         float evadeDistance = 5.0f;
 
-
         private bool m_Started = false; // Whether the tank has started moving.
         private Rigidbody m_Rigidbody;  // Reference used to the tank's regidbody.
         private TankSound m_TankSound;  // Reference used to play sound effects.
@@ -271,8 +270,7 @@ namespace CE6127.Tanks.AI
             }
             LaunchProjectile(DistanceToTarget + offset);
         }
-
-
+        
         public bool IsUnderAttack(){
             // Vector in direction of player
             Vector3 direction = Target.transform.forward;
@@ -345,9 +343,24 @@ namespace CE6127.Tanks.AI
         // For GRACE: 
         // TODO: check if there is an environment obstacle / ally tank that will block the shot to enemy
         public bool IsObstructionPresent(){
-            return false;
-        }
+            bool blocked = false;
+            Vector3 shell_destination = Target.position + new Vector3(0, FireTransform.position.y / 2, 0); // assign ray to hit middle of tank (if hit top, can't detect low obstacles; bottom - may sense ground / v low dunes)
+            // layer mask to only AI and default 
+            int layermask_AI = 1 << 11; // 11 represents AI Tank layer 
+            int layermask_default = 1 << 0; // 0 represents default layer where the background objects are 
+            int layermask = layermask_AI | layermask_default;
+            
+            blocked = Physics.Linecast(FireTransform.position, shell_destination, out RaycastHit hitInfo, layermask);
+            Debug.DrawLine(FireTransform.position, shell_destination, blocked ? Color.red : Color.green);
+            if (blocked)
+            {
+                Debug.Log("Hit: " + hitInfo.transform.name + ". Collider: " + hitInfo.collider + ". By tank: " + this.transform.position);
 
+            }
+            return blocked;
+        }
+        // Thoughts: reorientate / find path / chase target so that no obstruction and can shoot
+        // else will just be stuck there (cos in HyperAggression, will only return)
 
 
         // bundles top functions together
@@ -356,7 +369,7 @@ namespace CE6127.Tanks.AI
             UpdateDistanceToTarget();
             if(DistanceToTarget > TargetDistance) return;
             FaceTarget();
-            if(IsObstructionPresent()) return;
+            if(IsObstructionPresent()) return; // instead of return, have another function to rotate / find path to fire at target
             AttackTarget();
         }
     }
