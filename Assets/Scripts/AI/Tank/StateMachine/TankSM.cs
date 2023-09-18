@@ -273,34 +273,20 @@ namespace CE6127.Tanks.AI
         }
 
 
-        // For JUSTIN
-        // TODO: Find if player tank is oriented to AI tank
-        // 1. Calculate rotation of player tank
-        // 2. Calculate the Vector3 between players
-        // 3. Check if within range + if the player tank is at the correct angle to attack
         public bool IsUnderAttack(){
-            // Debug.Log("Check for intersect");
             // Vector in direction of player
             Vector3 direction = Target.transform.forward;
+            
             // Draw ray from position of player
             Ray ray = new Ray(Target.transform.position, direction);
-            // Debug.DrawRay(Target.transform.position, direction);
             LayerMask mask = LayerMask.GetMask("AI");
 
             RaycastHit hitInfo;
 
-            // if (Physics.Raycast(ray, out hitInfo, maxFiringDistance, mask)) {
-            //     Debug.Log("Intersect");
-            //     return true;
-            // }
-
-            // return false;
             return Physics.Raycast(ray, out hitInfo, maxFiringDistance, mask);
         }
 
 
-        // For JUSTIN:
-        // TODO: If ally nearby, how to shift 
         public void AvoidAlly(Vector3 allyPosition){
             // rotate around target, maintaining distance
             Vector3 toTarget = Target.position - transform.position; 
@@ -308,13 +294,11 @@ namespace CE6127.Tanks.AI
             evadeDirection = Quaternion.AngleAxis(90.0f, Vector3.up) * toTarget;
             Vector3 m_Destination = Target.transform.position + evadeDirection*TargetDistance;
             NavMeshAgent.SetDestination(m_Destination);
-            return;
         }
 
         // For JUSTIN:
         // TODO: If tank under attack, how to shift 
         public void AvoidEnemy(){
-            // Debug.Log("avoiding");
             float prob = Random.Range(0.0f, 1.0f);
             evadeDistance = Random.Range(3.0f, 6.0f);
 
@@ -324,20 +308,17 @@ namespace CE6127.Tanks.AI
 
             // // 15% chance to move straight backwards
             if (prob < moveBackProb) {
-                // Debug.Log("move back");
                 evadeDirection = -1 * toTarget;
             }
             
 
             // 10% chance for totally random movement
             if (prob >= (1.0f - randomProb)){
-                // Debug.Log("totally random");
                 evadeDirection = Quaternion.AngleAxis(Random.Range(0.0f, 360.0f), Vector3.up) * toTarget;
             }
 
             // Remainder for moving perpendicularly
             if (prob >= moveBackProb && prob < (1.0f - randomProb)){
-                // Debug.Log("sliiiiide to the side");
                 int halfProb = Random.Range(0, 2);
                 if (halfProb == 0){
                     evadeDirection = Quaternion.AngleAxis(90.0f, Vector3.up) * toTarget;
@@ -351,7 +332,6 @@ namespace CE6127.Tanks.AI
             // destination for moving in the other direction 
             Vector3 m_Destination = transform.position + evadeDirection*evadeDistance;
             NavMeshAgent.SetDestination(m_Destination);
-            return;
         }
 
 

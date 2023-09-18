@@ -27,8 +27,7 @@ namespace CE6127.Tanks.AI
         public override void Update()
         {
             base.Update();
-            m_TankSM.AvoidEnemy();
-
+            m_TankSM.HyperAggression();
             Debug.Log("In Evading State");
 
             // if low health, move to hiding
@@ -42,6 +41,8 @@ namespace CE6127.Tanks.AI
                 m_StateMachine.ChangeState(m_TankSM.m_States.Patrolling);
                 return;
             }
+            
+            m_TankSM.AvoidEnemy();
 
             // update tank last seen
             m_TankSM.targetLastSeen = m_TankSM.Target.position;
