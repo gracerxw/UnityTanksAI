@@ -328,12 +328,31 @@ namespace CE6127.Tanks.AI
             return shellVelocity;
 
         }    
+
+// var turn = m_MoveTurnInputValue.x * m_GameManager.AngularSpeed * Time.deltaTime;
+//             // Make this into a rotation in the y axis.
+//             Quaternion turnRotation = Quaternion.Euler(0f, turn, 0f);
+//             // Apply this rotation to the rigidbody's rotation.
+//             m_Rigidbody.MoveRotation(m_Rigidbody.rotation * turnRotation);
+
         public void Aim()
         {
-            var lookPos = Target.position + approxTargetTravel*tDir*shotLeadFactor - this.transform.position;//set look position to the predicted point in front of player
+            // var lookPos = Target.position + approxTargetTravel*tDir*shotLeadFactor - this.transform.position;//set look position to the predicted point in front of player
+            // lookPos.y = 0f;
+            // var rot = Quaternion.LookRotation(lookPos); //turn to face look position
+            // this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);//turn at maximum turn rate
+
+
+            // Calculate the desired rotation based on the target position.
+            var lookPos = Target.position + approxTargetTravel * tDir * shotLeadFactor - this.transform.position;
             lookPos.y = 0f;
-            var rot = Quaternion.LookRotation(lookPos); //turn to face look position
-            this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);//turn at maximum turn rate
+            var desiredRotation = Quaternion.LookRotation(lookPos);
+
+            // Calculate the rotation step based on the AngularSpeed.
+            float rotationStep = GameManager.AngularSpeed * Time.deltaTime;
+
+            // Rotate towards the desired rotation with a limited speed.
+            this.transform.rotation = Quaternion.RotateTowards(this.transform.rotation, desiredRotation, rotationStep);
         }
 
 
@@ -404,16 +423,7 @@ namespace CE6127.Tanks.AI
         }
 
 
-        // For JON (for Repositioning Class)
-        // TODO: check if an ally is within radius and skeet away
-        public bool IsAllyInRadius(){
-            return false;
-        }
-
-
-        // For GRACE: 
-        // TODO: check if there is an environment obstacle / ally tank that will block the shot to enemy
-        public bool IsObstructionPresent(){
+        public Vector3 GetObstructionCoords(){
             bool blocked = false;
             Vector3 shell_destination = Target.position + new Vector3(0, FireTransform.position.y / 2, 0); // assign ray to hit middle of tank (if hit top, can't detect low obstacles; bottom - may sense ground / v low dunes)
             // layer mask to only AI and default 
@@ -426,14 +436,10 @@ namespace CE6127.Tanks.AI
             if (blocked)
             {
                 Debug.Log("Hit: " + hitInfo.transform.name + ". Collider: " + hitInfo.collider + ". By tank: " + this.transform.position);
-
+                return hitInfo.transform.position;
             }
-            return blocked;
+            return Vector3.zero;
         }
-        // Thoughts: reorientate / find path / chase target so that no obstruction and can shoot
-        // else will just be stuck there (cos in HyperAggression, will only return)
-
-
 
         // bundles top functions together
         public void HyperAggression(){
@@ -442,8 +448,12 @@ namespace CE6127.Tanks.AI
             if(DistanceToTarget > TargetDistance) return;
             
             Aim();
-            if(IsObstructionPresent()) return; // instead of return, have another function to rotate / find path to fire at target
-            AttackTarget();
+            Vector3 obstacle = GetObstructionCoords();
+            if(obstacle == Vector3.zero){
+                AttackTarget();
+            }else {
+                AvoidAlly(obstacle);
+            }
         }
     }
 }
