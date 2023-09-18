@@ -59,11 +59,6 @@ namespace CE6127.Tanks.AI
                 return;
             }
 
-
-            // if ally in radius, skeet away to Repositioning
-            if(m_TankSM.IsAllyInRadius()){
-                m_StateMachine.ChangeState(m_TankSM.m_States.Repositioning);
-            }
         }
     }
 }

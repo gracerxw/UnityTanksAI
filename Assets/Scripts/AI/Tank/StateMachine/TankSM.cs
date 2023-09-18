@@ -443,6 +443,7 @@ namespace CE6127.Tanks.AI
 
         // bundles top functions together
         public void HyperAggression(){
+            Debug.Log("Target at: " + Target.transform.position);
             CheckHealth();
             UpdateDistanceToTarget();
             if(DistanceToTarget > TargetDistance) return;

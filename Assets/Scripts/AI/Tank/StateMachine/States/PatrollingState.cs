@@ -54,11 +54,6 @@ namespace CE6127.Tanks.AI
                 return;
             }
 
-            if (m_TankSM.IsAllyInRadius()){
-                m_StateMachine.ChangeState(m_TankSM.m_States.Repositioning);
-                return;
-            }
-
 
 
             // update patrolling destination
