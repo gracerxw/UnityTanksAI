@@ -61,6 +61,10 @@ namespace CE6127.Tanks.AI
         public Vector2 FireInterval = new(0.7f, 2.5f);              // A minimum and maximum cooldown time delay between each firing.
         [Tooltip("Force given to the shell if the fire button is not held, and the force given to the shell if the fire button is held for the max charge time in seconds.")]
         public Vector2 LaunchForceMinMax = new(6.5f, 30f);          // The force given to the shell if the fire button is not held, and the force given to the shell if the fire button is held for the max charge time.
+        
+        [Header("Evading")]
+        [Range(0f, 300f)] public float maxFiringDistance = 35f;    // Maximum firing distance of player
+
         [Header("References")]
         [Tooltip("Prefab")] public Rigidbody Shell;                 // Prefab of the shell.
         [Tooltip("Transform")] public Transform FireTransform;      // A child of the tank where the shells are spawned.
@@ -83,6 +87,11 @@ namespace CE6127.Tanks.AI
         // for transition to RangeFinding State
         public float minDistToPlayer = 10f;
 
+        // for evading
+        float moveBackProb = 0.15f;
+        float randomProb = 0.1f;
+        Vector3 evadeDirection = new Vector3(0.0f, 0.0f, 0.0f);
+        float evadeDistance = 5.0f;
 
 
         private bool m_Started = false; // Whether the tank has started moving.
@@ -270,20 +279,78 @@ namespace CE6127.Tanks.AI
         // 2. Calculate the Vector3 between players
         // 3. Check if within range + if the player tank is at the correct angle to attack
         public bool IsUnderAttack(){
-            return false;
+            // Debug.Log("Check for intersect");
+            // Vector in direction of player
+            Vector3 direction = Target.transform.forward;
+            // Draw ray from position of player
+            Ray ray = new Ray(Target.transform.position, direction);
+            // Debug.DrawRay(Target.transform.position, direction);
+            LayerMask mask = LayerMask.GetMask("AI");
+
+            RaycastHit hitInfo;
+
+            // if (Physics.Raycast(ray, out hitInfo, maxFiringDistance, mask)) {
+            //     Debug.Log("Intersect");
+            //     return true;
+            // }
+
+            // return false;
+            return Physics.Raycast(ray, out hitInfo, maxFiringDistance, mask);
         }
 
 
         // For JUSTIN:
         // TODO: If ally nearby, how to shift 
         public void AvoidAlly(Vector3 allyPosition){
+            // rotate around target, maintaining distance
+            Vector3 toTarget = Target.position - transform.position; 
+            toTarget = toTarget.normalized;
+            evadeDirection = Quaternion.AngleAxis(90.0f, Vector3.up) * toTarget;
+            Vector3 m_Destination = Target.transform.position + evadeDirection*TargetDistance;
+            NavMeshAgent.SetDestination(m_Destination);
             return;
         }
 
         // For JUSTIN:
         // TODO: If tank under attack, how to shift 
         public void AvoidEnemy(){
+            // Debug.Log("avoiding");
+            float prob = Random.Range(0.0f, 1.0f);
+            evadeDistance = Random.Range(3.0f, 6.0f);
+
             // you can grab the enemy target position and rotation using the `Target` Variable.
+            Vector3 toTarget = Target.position - transform.position; 
+            toTarget = toTarget.normalized;
+
+            // // 15% chance to move straight backwards
+            if (prob < moveBackProb) {
+                // Debug.Log("move back");
+                evadeDirection = -1 * toTarget;
+            }
+            
+
+            // 10% chance for totally random movement
+            if (prob >= (1.0f - randomProb)){
+                // Debug.Log("totally random");
+                evadeDirection = Quaternion.AngleAxis(Random.Range(0.0f, 360.0f), Vector3.up) * toTarget;
+            }
+
+            // Remainder for moving perpendicularly
+            if (prob >= moveBackProb && prob < (1.0f - randomProb)){
+                // Debug.Log("sliiiiide to the side");
+                int halfProb = Random.Range(0, 2);
+                if (halfProb == 0){
+                    evadeDirection = Quaternion.AngleAxis(90.0f, Vector3.up) * toTarget;
+                }
+
+                if (halfProb == 1){
+                    evadeDirection = Quaternion.AngleAxis(-90.0f, Vector3.up) * toTarget;
+                }
+            }
+
+            // destination for moving in the other direction 
+            Vector3 m_Destination = transform.position + evadeDirection*evadeDistance;
+            NavMeshAgent.SetDestination(m_Destination);
             return;
         }
 
