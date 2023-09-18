@@ -83,14 +83,6 @@ namespace CE6127.Tanks.AI
         // for transition to RangeFinding State
         public float minDistToPlayer = 10f;
 
-        // for target tracking
-        // [HideInInspector] public float TrackCooldown;
-        // public float ActualTrackInterval = 0.5f;
-        // [HideInInspector] public Vector3 TargetStoredPos = new Vector3(-1,-1,-1);
-        // [HideInInspector] private Vector3 barrelOffset;
-        // [HideInInspector] public float ShellVel;
-
-
         private bool m_Started = false; // Whether the tank has started moving.
         private Rigidbody m_Rigidbody;  // Reference used to the tank's regidbody.
         private TankSound m_TankSound;  // Reference used to play sound effects.
@@ -148,9 +140,6 @@ namespace CE6127.Tanks.AI
             StopDistance = 22f;
             ActualFireInterval = 0.7f;
             health = GetComponent<TankHealth>();
-
-            //joe's initializations
-            // barrelOffset= new Vector3(FireTransform.position.x-transform.position.x,transform.position.y,FireTransform.position.z-transform.position.z); //barrel offset vector from tank
 
             SetStopDistanceToTarget();
 
@@ -263,40 +252,22 @@ namespace CE6127.Tanks.AI
         // 1.5 If not within constraints just return
         // 2. Get appropriate angle + rotation
         // 3. Calculate appropriate force based on relative velocity + position
-
-        // public void TargetPrediction(){
-        //     if(Target == null) return;
-        //     var tDir = Vector3.Normalize(Target.position - TargetStoredPos); //unit vector for tank direction
-        //     //Debug.DrawRay(Target.position, tDir*(GameManager.Speed*Time.deltaTime),Color.green,3);
-        //     float approxFlightTime =Mathf.Sqrt(2*((1.7f + DistanceToTarget*Mathf.Tan(10*Mathf.PI/180))/9.81f));//approximate flight time of shell based on current dist to player tank
-        //     float approxtargetTravel = GameManager.Speed*approxFlightTime;// travel of player tank in the approx flight time of the shell
-
-        //     float PrecisionDistToTarget = Vector3.Distance(this.transform.position+barrelOffset, Target.position + tDir*approxtargetTravel); //recalculate a more accurate dist from barrel to predicted location
-        //     float FlightTime = Mathf.Sqrt(2*((1.7f + PrecisionDistToTarget*Mathf.Tan(10*Mathf.PI/180))/9.81f));//recalculate flight time with accurate distance
-        //     ShellVel = PrecisionDistToTarget/(FlightTime*Mathf.Cos(10*Mathf.PI/180));//calculate shell velocity based on precise fistance
-        //     if (ShellVel < LaunchForceMinMax.x) //if below min shell velocity set to min
-        //     {
-        //         ShellVel = LaunchForceMinMax.x;
-        //     }
-        //     else if (ShellVel > LaunchForceMinMax.y) //if above max shell velocity set to max
-        //     {
-        //         ShellVel = LaunchForceMinMax.y;
-        //     }
-        //     var lookPos = Target.position + approxtargetTravel*tDir - this.transform.position;//set look position to the predicted point in front of player
-        //     lookPos.y = 0f;
-        //     var rot = Quaternion.LookRotation(lookPos); //turn to face look position
-        //     this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);
-        //     //Debug.DrawRay(Target.position, tDir*approxtargetTravel,Color.red,3);
-        //     //Debug.Log(ShellVel);
-        // }    
         public void AttackTarget(float offset = 0f){
             // offset because the tanks will be in motion, 
             // to refine: can calculate whether the target is moving away + whether you are moving closer
             if(offset == 0f){
                 offset = Random.Range(-3f, 3f);
             }
-            // TargetPrediction();
-            // LaunchProjectile(ShellVel);
+            LaunchProjectile(DistanceToTarget + offset);
+        }
+
+
+        public void AttackTarget(float offset = 0f){
+            // offset because the tanks will be in motion, 
+            // to refine: can calculate whether the target is moving away + whether you are moving closer
+            if(offset == 0f){
+                offset = Random.Range(-3f, 3f);
+            }
             LaunchProjectile(DistanceToTarget + offset);
         }
 
@@ -335,49 +306,6 @@ namespace CE6127.Tanks.AI
         // For GRACE: 
         // TODO: check if there is an environment obstacle / ally tank that will block the shot to enemy
         public bool IsObstructionPresent(){
-            
-            // Attempt 1: Simple solution
-
-            // NavMeshHit hit;
-            // return NavMeshAgent.Raycast(Target.position, out hit); // v simplistic straight line from AI tank to target, rly dont shoot if sth in sight, q sensitive 
-            // this works best, but still buggy in the sense if cant shoot, also dont move (ref thoughts below)
-            // return NavMesh.Raycast(FireTransform.position, Target.position, out hit, NavMesh.AllAreas); // FireTransform is where shells are spawned
-            // return NavMesh.Raycast(this.transform.position, Target.position, out hit, NavMesh.AllAreas); // should be same as NavMeshAgent line but results seems diff
-            // return false;
-
-
-            // Attempt 2: 
-            // attempt 1 but with improved ray source and destination + debugging code and layermask
-            // errors: 
-            // (1) 
-            // (2) hypersensitive to obstacles - detects obstacles altho by eye power seems like ray did not touch
-            // (3) ray is a straight line - lose firing opportunities if shell's trajectory actually flows over obstacles
-            
-            // NavMeshHit hit;
-            // bool blocked = false;
-            // Vector3 shell_destination = Target.position + new Vector3(0, FireTransform.position.y / 2, 0); // assign ray to middle top of tank
-            // // layer mask to only AI and default 
-            // int layermask_AI = 1 << 11; // 11 represents AI Tank layer 
-            // int layermask_default = 1 << 0; // 0 represents default layer where the background objects are 
-            // int layermask = layermask_AI | layermask_default;
-            
-            // blocked = NavMesh.Raycast(FireTransform.position, shell_destination, out hit, layermask); 
-            // Debug.DrawLine(FireTransform.position, shell_destination, blocked ? Color.red : Color.green);
-            // if (blocked)
-            // {
-            //     Debug.DrawRay(hit.position, Vector3.up, Color.red);
-            //     Debug.Log("Hit object position: " + hit.position + " in mask: " + + hit.mask + " by tank: " + this.transform.position);
-            // }
-            // return blocked;
-
-
-            // Attempt 2.2: 
-            // Physics.Linecast for only collidors(?)
-            // Physics.Raycast and Linecast is "less sensitive" (for colliders only) than NavMesh.Raycast (2.5D -> detect holes in ground etc)
-            // errors: 
-            // (1) terrain does not have exact colliders
-            // (2) ray is a straight line - lose firing opportunities if shell's trajectory actually flows over obstacles
-
             bool blocked = false;
             Vector3 shell_destination = Target.position + new Vector3(0, FireTransform.position.y / 2, 0); // assign ray to hit middle of tank (if hit top, can't detect low obstacles; bottom - may sense ground / v low dunes)
             // layer mask to only AI and default 
@@ -393,50 +321,6 @@ namespace CE6127.Tanks.AI
 
             }
             return blocked;
-
-
-            // Attempt 3: 
-            // Curved Raycast following shell trajectory 
-            // errors: 
-            // (1) still shells some obstacles esp if obstacle is further away 
-            // (2) sometimes detects shells it releases (still in midair) as obstacles 
-
-            // bool blocked = false;
-            // int numSamples = 100; // Number of samples along the trajectory (NOTE: when numSamples = high, detect own shell that was previously released)
-            // float maxDistance = 100f; // Maximum distance to check for obstacles
-            // // *** TO BE CHANGED TO JOE'S PREDICTIVE LAUNCHFORCE instead of 1f *** 
-            // Vector3 initialVelocity = 1f * FireTransform.forward; // initial velocity 
-            // Vector3 shellVelocity = initialVelocity; 
-            // // layer mask to only AI and default 
-            // int layermask_AI = 1 << 11; // 11 represents AI Tank layer 
-            // int layermask_default = 1 << 0; // 0 represents default layer where the background objects are 
-            // int layermask = layermask_AI | layermask_default;
-
-            // // Calculate time step for trajectory sampling
-            // float timeStep = maxDistance / numSamples;
-
-            // for (float t = 0; t < maxDistance; t += timeStep)
-            // {
-                
-            //     // Calculate the position of the shell at time t
-            //     Vector3 shellPosition = FireTransform.position + initialVelocity * t + 0.5f * Physics.gravity * t * t;
-
-            //     // Create a ray from the shell's position to check for obstacles
-            //     Ray ray = new Ray(shellPosition, shellVelocity.normalized);
-
-            //     blocked = Physics.Raycast(ray, out RaycastHit hit, timeStep, layermask); 
-            //     Debug.DrawRay(FireTransform.position, shellVelocity.normalized * hit.distance, Color.blue);
-            //     // Check if the ray hits anything
-            //     if (blocked)
-            //     {
-            //         Debug.DrawRay(FireTransform.position, shellVelocity.normalized * hit.distance, Color.red);
-            //         Debug.Log("Hit object position: " + hit.transform.name + " by tank: " + this.transform.position); 
-            //         return blocked; 
-            //     }
-            //     // Update the current velocity based on gravity
-            //     shellVelocity += Physics.gravity * timeStep;
-            // }
-            // return blocked; 
         }
         // Thoughts: reorientate / find path / chase target so that no obstruction and can shoot
         // else will just be stuck there (cos in HyperAggression, will only return)

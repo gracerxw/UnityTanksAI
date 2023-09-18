@@ -46,7 +46,7 @@ namespace CE6127.Tanks.AI
             // once good range is reached ie max StopDistance away (22f), go back to Chasing state
             if (m_TankSM.DistanceToTarget >= m_TankSM.StopDistance) // StopDistance = 22f
             {
-                Debug.Log("changing state");
+                Debug.Log("changing state to chasing");
                 m_StateMachine.ChangeState(m_TankSM.m_States.Chasing);
                 return; 
             }
@@ -54,15 +54,6 @@ namespace CE6127.Tanks.AI
             // update rangefinding destination
             Debug.Log("update destination");
             m_TankSM.NavMeshAgent.SetDestination(m_Destination);
-
-            // old code 
-            // if (Time.time >= m_TankSM.NavMeshUpdateDeadline)
-            // {
-            //     Debug.Log("update destination");
-            //     // no delay 
-            //     m_TankSM.NavMeshUpdateDeadline = Time.time; // + m_TankSM.PatrolNavMeshUpdate; 
-            //     m_TankSM.NavMeshAgent.SetDestination(m_Destination);
-            // }
         }
 
         /// <summary>
@@ -71,8 +62,6 @@ namespace CE6127.Tanks.AI
         public override void Exit()
         {
             base.Exit();
-
-            Debug.Log("exit coroutine");
             m_TankSM.StopCoroutine(RangeFinding());
         }
 
@@ -81,30 +70,18 @@ namespace CE6127.Tanks.AI
         /// </summary>
         IEnumerator RangeFinding()
         {
-            Debug.Log("coroutine start");
             while (true) 
             {
                 // direction AI tank has been moving in (towards enemy)
                 directionTowardsTarget = m_TankSM.Target.position - m_TankSM.transform.position; 
                 directionTowardsTarget = directionTowardsTarget.normalized;
-                Debug.Log("calc directionTowardsTarget");
+                
                 // amount to move in the other direction 
                 directionToMoveAway = -1 * directionTowardsTarget;
-                Debug.Log("calc directionToMoveAway");
 
                 // destination for moving in the other direction 
-                m_Destination = m_TankSM.Target.position + directionToMoveAway*m_TankSM.StopDistance; // maximum move 22f dist away (max StopDistance)
-                // TEST
-                // m_Destination = m_TankSM.Target.position + directionToMoveAway*100f; // maximum move 22f dist away (max StopDistance)
-                Debug.Log("calc m_Destination");
+                m_Destination = m_TankSM.Target.position + directionToMoveAway * m_TankSM.StopDistance; 
 
-                // old code
-                // float waitInSec = Random.Range(m_TankSM.PatrolWaitTime.x, m_TankSM.PatrolWaitTime.y); // time delay set to the same as patrolling time delay
-                // TEST
-                // float waitInSec = Random.Range(0.01f, 0.2f); // time delay set to the same as patrolling time delay
-                // yield return new WaitForSeconds(waitInSec);
-                
-                // Resume execution after All Update functions have been called, on the next frame.
                 yield return null; 
             }
         }
