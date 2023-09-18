@@ -10,6 +10,7 @@ namespace CE6127.Tanks.AI
     internal class HidingState : BaseState
     {
         private TankSM m_TankSM; // Reference to the tank state machine.
+        Vector3 HideSpot = new Vector3(43.82f, 0.0f, -39.34f);
 
         /// <summary>
         /// Constructor <c>HidingState</c> is the constructor of the class.
@@ -27,13 +28,14 @@ namespace CE6127.Tanks.AI
         public override void Update()
         {
             base.Update();
-            m_TankSM.HyperAggression();
-
             Debug.Log("In Hiding phase");
 
-            // Responsibility: TBD
 
-            
+            if(Vector3.Magnitude(HideSpot -  m_TankSM.transform.position) <= 2f){
+                m_TankSM.HyperAggression();
+            } else {
+                m_TankSM.NavMeshAgent.SetDestination(HideSpot);
+            }
         }
     }
 }

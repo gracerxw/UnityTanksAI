@@ -17,6 +17,7 @@ namespace CE6127.Tanks.AI
             // States:
             public PatrollingState Patrolling;
             public HidingState Hiding;
+            public GettingCenterState GettingCenter;
             public ChasingState Chasing;
             public RangeFindingState RangeFinding;
             public EvadingState Evading;
@@ -25,6 +26,7 @@ namespace CE6127.Tanks.AI
             {
                 Patrolling = new PatrollingState(sm);
                 Hiding = new HidingState(sm);
+                GettingCenter = new GettingCenterState(sm);
                 Chasing = new ChasingState(sm);
                 Evading = new EvadingState(sm);
                 RangeFinding = new RangeFindingState(sm);
@@ -124,7 +126,7 @@ namespace CE6127.Tanks.AI
         /// <summary>
         /// Method <c>GetInitialState</c> returns the initial state of the state machine.
         /// </summary>
-        protected override BaseState GetInitialState() => m_States.Patrolling;
+        protected override BaseState GetInitialState() => m_States.GettingCenter;
 
         /// <summary>
         /// Method <c>SetNavMeshAgent</c> sets the NavMeshAgent's speed and angular speed.
@@ -327,14 +329,9 @@ namespace CE6127.Tanks.AI
 
         }    
 
-// var turn = m_MoveTurnInputValue.x * m_GameManager.AngularSpeed * Time.deltaTime;
-//             // Make this into a rotation in the y axis.
-//             Quaternion turnRotation = Quaternion.Euler(0f, turn, 0f);
-//             // Apply this rotation to the rigidbody's rotation.
-//             m_Rigidbody.MoveRotation(m_Rigidbody.rotation * turnRotation);
-
         public void Aim()
         {
+            // old:
             // var lookPos = Target.position + approxTargetTravel*tDir*shotLeadFactor - this.transform.position;//set look position to the predicted point in front of player
             // lookPos.y = 0f;
             // var rot = Quaternion.LookRotation(lookPos); //turn to face look position
