@@ -420,19 +420,27 @@ namespace CE6127.Tanks.AI
 
         public Vector3 GetObstructionCoords(){
             bool blocked = false;
-            Vector3 shell_destination = Target.position + new Vector3(0, FireTransform.position.y / 2, 0); // assign ray to hit middle of tank (if hit top, can't detect low obstacles; bottom - may sense ground / v low dunes)
+            // Vector3 shell_destination = Target.position + new Vector3(0, FireTransform.position.y / 2, 0); // assign ray to hit middle of tank (if hit top, can't detect low obstacles; bottom - may sense ground / v low dunes)
             // layer mask to only AI and default 
             int layermask_AI = 1 << 11; // 11 represents AI Tank layer 
             int layermask_default = 1 << 0; // 0 represents default layer where the background objects are 
             int layermask = layermask_AI | layermask_default;
             
-            blocked = Physics.Linecast(FireTransform.position, shell_destination, out RaycastHit hitInfo, layermask);
+            // blocked = Physics.Linecast(FireTransform.position, shell_destination, out RaycastHit hitInfo, layermask);
+
+            Vector3 shell_destination = Target.position + new Vector3(0, FireTransform.position.y / 2, 0); // assign ray to hit middle of tank
+            Vector3 directionTowardsTarget = shell_destination - FireTransform.position; 
+            Ray curr_ray = new Ray(FireTransform.position, directionTowardsTarget.normalized);
+            blocked = Physics.SphereCast(curr_ray, 0.15f, out RaycastHit hitInfo, DistanceToTarget, layermask);
+
+
             Debug.DrawLine(FireTransform.position, shell_destination, blocked ? Color.red : Color.green);
             if (blocked)
             {
                 Debug.Log("Hit: " + hitInfo.transform.name + ". Collider: " + hitInfo.collider + ". By tank: " + this.transform.position);
                 return hitInfo.transform.position;
             }
+            
             return Vector3.zero;
         }
 
