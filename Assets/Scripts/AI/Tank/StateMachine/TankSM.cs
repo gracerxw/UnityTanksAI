@@ -295,6 +295,7 @@ namespace CE6127.Tanks.AI
             
             float wiggleTrackProb = 0.6f;
             float gravity = 9.81f;
+            
 
             //if the distance of the tank from the lagged slow position is less than 0.6 of the expected value if the tank were going at full speed in a straight line
             if(Vector3.Magnitude(Target.position - ActiveSlowTargetStoredPos) < GameManager.Speed * WiggleTrackInterval * wiggleTrackProb)
@@ -306,13 +307,11 @@ namespace CE6127.Tanks.AI
                 shotLeadFactor = mstrShotLeadFactor; //set shot lead factor to the master value
             }
 
-            tDir = Vector3.Normalize(Target.position - TargetStoredPos); //unit vector for tank direction
+            float flightTime = Mathf.Sqrt(2*((1.7f + DistanceToTarget*Mathf.Tan(10*Mathf.PI/180))/gravity));//approximate flight time of shell based on current dist to player tank
             
 
             float precisionDistToTarget = Vector3.Distance(this.transform.position+transform.forward*barrelOffset, Target.position + tDir * GameManager.Speed * shotLeadFactor);
-            float flightTime = Mathf.Sqrt(2*((1.7f + DistanceToTarget*Mathf.Tan(10*Mathf.PI/180))/gravity));//approximate flight time of shell based on current dist to player tank
-
-            approxTargetTravel = GameManager.Speed * flightTime;// travel of player tank in the approx flight time of the shell
+            
 
             float shellVelocity = precisionDistToTarget/(flightTime*Mathf.Cos(10*Mathf.PI/180));//calculate shell velocity based on precise distance
 
@@ -339,6 +338,13 @@ namespace CE6127.Tanks.AI
 
 
             // Calculate the desired rotation based on the target position.
+            float gravity = 9.81f;
+            float flightTime = Mathf.Sqrt(2*((1.7f + DistanceToTarget*Mathf.Tan(10*Mathf.PI/180))/gravity));//approximate flight time of shell based on current dist to player tank
+
+            tDir = Vector3.Normalize(Target.position - TargetStoredPos); //unit vector for tank direction
+            approxTargetTravel = GameManager.Speed * flightTime;// travel of player tank in the approx flight time of the shell
+
+
             var lookPos = Target.position + approxTargetTravel * tDir * shotLeadFactor - this.transform.position;
             lookPos.y = 0f;
             var desiredRotation = Quaternion.LookRotation(lookPos);
