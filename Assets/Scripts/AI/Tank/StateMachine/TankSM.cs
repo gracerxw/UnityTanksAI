@@ -332,10 +332,10 @@ namespace CE6127.Tanks.AI
         public void Aim()
         {
             // old:
-            // var lookPos = Target.position + approxTargetTravel*tDir*shotLeadFactor - this.transform.position;//set look position to the predicted point in front of player
-            // lookPos.y = 0f;
-            // var rot = Quaternion.LookRotation(lookPos); //turn to face look position
-            // this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);//turn at maximum turn rate
+            var lookPos = Target.position + approxTargetTravel*tDir*shotLeadFactor - this.transform.position;//set look position to the predicted point in front of player
+            lookPos.y = 0f;
+            var rot = Quaternion.LookRotation(lookPos); //turn to face look position
+            this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);//turn at maximum turn rate
 
 
             // Calculate the desired rotation based on the target position.
@@ -348,15 +348,15 @@ namespace CE6127.Tanks.AI
 
 
 
-            var lookPos = Target.position + approxTargetTravel * tDir * shotLeadFactor - this.transform.position;
-            lookPos.y = 0f;
-            var desiredRotation = Quaternion.LookRotation(lookPos);
+            // var lookPos = Target.position + approxTargetTravel * tDir * shotLeadFactor - this.transform.position;
+            // lookPos.y = 0f;
+            // var desiredRotation = Quaternion.LookRotation(lookPos);
 
-            // Calculate the rotation step based on the AngularSpeed.
-            float rotationStep = GameManager.AngularSpeed * Time.deltaTime;
+            // // Calculate the rotation step based on the AngularSpeed.
+            // float rotationStep = GameManager.AngularSpeed * Time.deltaTime;
 
-            // Rotate towards the desired rotation with a limited speed.
-            this.transform.rotation = Quaternion.RotateTowards(this.transform.rotation, desiredRotation, rotationStep);
+            // // Rotate towards the desired rotation with a limited speed.
+            // this.transform.rotation = Quaternion.RotateTowards(this.transform.rotation, desiredRotation, rotationStep);
         }
 
 
