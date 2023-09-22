@@ -379,7 +379,7 @@ namespace CE6127.Tanks.AI
         }
 
 
-        public void AvoidAlly(Vector3 allyPosition){
+        public void AvoidObstacle(){
             // rotate around target, maintaining distance
             Vector3 toTarget = Target.position - transform.position; 
             toTarget = toTarget.normalized;
@@ -465,7 +465,7 @@ namespace CE6127.Tanks.AI
             if(obstacle == Vector3.zero){
                 AttackTarget();
             }else {
-                AvoidAlly(obstacle);
+                AvoidObstacle();
             }
         }
     }
