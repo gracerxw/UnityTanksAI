@@ -383,7 +383,7 @@ namespace CE6127.Tanks.AI
             // rotate around target, maintaining distance
             Vector3 toTarget = Target.position - transform.position; 
             toTarget = toTarget.normalized;
-            evadeDirection = Quaternion.AngleAxis(90.0f, Vector3.up) * toTarget;
+            evadeDirection = Quaternion.AngleAxis(15.0f, Vector3.up) * toTarget;
             Vector3 m_Destination = Target.transform.position + evadeDirection*TargetDistance;
             NavMeshAgent.SetDestination(m_Destination);
         }
