@@ -29,7 +29,7 @@ namespace CE6127.Tanks.AI
             base.Update();
             m_TankSM.HyperAggression();
 
-            Debug.Log("In Chasing State");
+            //Debug.Log("In Chasing State");
 
 
             // if low health, move to hiding

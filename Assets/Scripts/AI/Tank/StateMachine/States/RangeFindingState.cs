@@ -20,7 +20,7 @@ namespace CE6127.Tanks.AI
         /// Constructor <c>RangeFinding</c> is the constructor of the class.
         /// </summary>
         public RangeFindingState(TankSM tankStateMachine) : base("RangeFinding", tankStateMachine) => m_TankSM = (TankSM)m_StateMachine;
-
+        public bool Active;
         /// <summary>
         /// Method <c>Enter</c> is called when the state is entered.
         /// </summary>
@@ -29,6 +29,7 @@ namespace CE6127.Tanks.AI
             base.Enter();
 
             m_TankSM.StartCoroutine(RangeFinding());
+            Active = true;
         }
 
         /// <summary>
@@ -39,7 +40,7 @@ namespace CE6127.Tanks.AI
             base.Update();
             m_TankSM.HyperAggression();
 
-            Debug.Log("In range finding state:");
+            //Debug.Log("In range finding state:");
 
             // Go Grace!
 
@@ -47,6 +48,7 @@ namespace CE6127.Tanks.AI
             if (m_TankSM.DistanceToTarget >= m_TankSM.StopDistance) // StopDistance = 22f
             {
                 Debug.Log("changing state to chasing");
+                Active = false;
                 m_StateMachine.ChangeState(m_TankSM.m_States.Chasing);
                 return; 
             }
@@ -62,6 +64,7 @@ namespace CE6127.Tanks.AI
         public override void Exit()
         {
             base.Exit();
+            Active = false;
             m_TankSM.StopCoroutine(RangeFinding());
         }
 

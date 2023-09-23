@@ -28,7 +28,7 @@ namespace CE6127.Tanks.AI
         public override void Update()
         {
             base.Update();
-            Debug.Log("In Hiding phase");
+            //Debug.Log("In Hiding phase");
             m_TankSM.CheckHealth();
             if (m_TankSM.isLowHealth){
                 m_StateMachine.ChangeState(m_TankSM.m_States.Patrolling);

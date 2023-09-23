@@ -302,10 +302,17 @@ namespace CE6127.Tanks.AI
             if(Vector3.Magnitude(Target.position - ActiveSlowTargetStoredPos) < GameManager.Speed * WiggleTrackInterval * wiggleTrackProb)
             {
                 shotLeadFactor = 0.0f; //set shot lead factor low to hit the player tank even if wiggling
+                //Debug.Log("wiggle detected");
+            }
+            else if (m_States.RangeFinding.Active== true)
+            {
+                shotLeadFactor = 0.0f;
+                //Debug.Log("running and shooting");
             }
             else
             {
                 shotLeadFactor = mstrShotLeadFactor; //set shot lead factor to the master value
+                //Debug.Log("Normal prediction");
             }
 
             
@@ -332,12 +339,7 @@ namespace CE6127.Tanks.AI
 
         public void Aim()
         {
-            // old:
-            var lookPos = Target.position + approxTargetTravel*tDir*shotLeadFactor - this.transform.position;//set look position to the predicted point in front of player
-            lookPos.y = 0f;
-            var rot = Quaternion.LookRotation(lookPos); //turn to face look position
-            this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);//turn at maximum turn rate
-
+            
 
             // Calculate the desired rotation based on the target position.
             float gravity = 9.81f;
@@ -347,6 +349,11 @@ namespace CE6127.Tanks.AI
             float flightTime = Mathf.Sqrt(2*((1.7f + precisionDistToTarget*Mathf.Tan(10*Mathf.PI/180))/gravity));//approximate flight time of shell based on current dist to player tank
             approxTargetTravel = GameManager.Speed * flightTime;// travel of player tank in the approx flight time of the shell
 
+            // old:
+            var lookPos = Target.position + approxTargetTravel*tDir*shotLeadFactor - this.transform.position;//set look position to the predicted point in front of player
+            lookPos.y = 0f;
+            var rot = Quaternion.LookRotation(lookPos); //turn to face look position
+            this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);//turn at maximum turn rate
 
 
             // var lookPos = Target.position + approxTargetTravel * tDir * shotLeadFactor - this.transform.position;
@@ -447,7 +454,7 @@ namespace CE6127.Tanks.AI
             Debug.DrawLine(FireTransform.position, shell_destination, blocked ? Color.red : Color.green);
             if (blocked)
             {
-                Debug.Log("Hit: " + hitInfo.transform.name + ". Collider: " + hitInfo.collider + ". By tank: " + this.transform.position);
+                //Debug.Log("Hit: " + hitInfo.transform.name + ". Collider: " + hitInfo.collider + ". By tank: " + this.transform.position);
                 return hitInfo.transform.position;
             }
             
@@ -456,7 +463,7 @@ namespace CE6127.Tanks.AI
 
         // bundles top functions together
         public void HyperAggression(){
-            Debug.Log("Target at: " + Target.transform.position);
+            //Debug.Log("Target at: " + Target.transform.position);
             CheckHealth();
             UpdateDistanceToTarget();
             if(DistanceToTarget > TargetDistance) return;
