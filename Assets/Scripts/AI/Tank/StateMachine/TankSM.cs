@@ -44,11 +44,9 @@ namespace CE6127.Tanks.AI
         [Range(0f, 2f)] public float PatrolNavMeshUpdate = 0.2f;    // A delay between each parolling path update.
         [Header("Targeting")]
         [Tooltip("Minimum and maximum range for the targeting range.")]
-        public Vector2 StartToTargetDist = new(28f, 35f);           // A minimum and maximum range for the targeting range.
         [HideInInspector] public float TargetDistance;              // The distance between the tank and the target.
         [Tooltip("Minimum and maximum range for the stopping range.")]
-        public Vector2 StopAtTargetDist = new(18f, 22f);            // A minimum and maximum range for the stopping range.
-        [HideInInspector] public float StopDistance;                // The distance between the tank and the target.
+        public float StopDistance =22f;                // The distance between the tank and the target.
         [Range(0f, 2f)] public float TargetNavMeshUpdate = 0.2f;    // A delay between each targeting path update.
         [Header("Blending")]
         [Range(0f, 1f)] public float OrientSlerpScalar = 0.2f;      // A scalar for the slerp.
@@ -95,6 +93,8 @@ namespace CE6127.Tanks.AI
         private float WiggleTrackInterval; //interval between slow position updates
         private float WiggleCooldown;//current time left between slow position updates
         public float mstrShotLeadFactor = 1.15f; //multiplication factor to determine how far in front of the tanks direction to shoot
+        public Vector3 lookPos;
+        public float DangerClose = 5f;
         [HideInInspector] public float shotLeadFactor; //current shot lead factor
         [HideInInspector] public Vector3 TargetStoredPos = new Vector3(-1,-1,-1);//stored location of player tank updated every ActualTrackInterval period
         [HideInInspector] public Vector3 NewSlowTargetStoredPos = new Vector3(-1,-1,-1);//slow stored location updated every WiggleTrackInterval period
@@ -304,7 +304,7 @@ namespace CE6127.Tanks.AI
                 shotLeadFactor = 0.0f; //set shot lead factor low to hit the player tank even if wiggling
                 //Debug.Log("wiggle detected");
             }
-            else if (m_States.RangeFinding.Active== true)
+            else if (Vector3.Magnitude(Target.position-transform.position)<DangerClose)
             {
                 shotLeadFactor = 0.0f;
                 //Debug.Log("running and shooting");
@@ -344,7 +344,7 @@ namespace CE6127.Tanks.AI
             approxTargetTravel = GameManager.Speed * flightTime;// travel of player tank in the approx flight time of the shell
 
             // old:
-            var lookPos = Target.position + approxTargetTravel*tDir*shotLeadFactor - this.transform.position;//set look position to the predicted point in front of player
+            lookPos = Target.position + approxTargetTravel*tDir*shotLeadFactor - this.transform.position;//set look position to the predicted point in front of player
             lookPos.y = 0f;
             var rot = Quaternion.LookRotation(lookPos); //turn to face look position
             this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);//turn at maximum turn rate
@@ -436,7 +436,7 @@ namespace CE6127.Tanks.AI
             
             // blocked = Physics.Linecast(FireTransform.position, shell_destination, out RaycastHit hitInfo, layermask);
 
-            Vector3 shell_destination = Target.position + new Vector3(0, FireTransform.position.y / 2, 0); // assign ray to hit middle of tank
+            Vector3 shell_destination = lookPos; // assign ray to hit middle of tank
             Vector3 directionTowardsTarget = shell_destination - FireTransform.position; 
             Ray curr_ray = new Ray(FireTransform.position, directionTowardsTarget.normalized);
             blocked = Physics.SphereCast(curr_ray, 0.15f, out RaycastHit hitInfo, DistanceToTarget, layermask);
