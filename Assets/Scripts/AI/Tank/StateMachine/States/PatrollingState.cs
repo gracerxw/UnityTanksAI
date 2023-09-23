@@ -54,8 +54,6 @@ namespace CE6127.Tanks.AI
                 return;
             }
 
-
-
             // update patrolling destination
             if (Time.time >= m_TankSM.NavMeshUpdateDeadline)
             {

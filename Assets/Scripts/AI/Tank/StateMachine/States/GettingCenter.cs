@@ -30,7 +30,7 @@ namespace CE6127.Tanks.AI
         public override void Update()
         {
             base.Update();
-            Debug.Log("In Getting Center phase");
+            // Debug.Log("In Getting Center phase");
 
             // if low health, move to hiding
             if (m_TankSM.isLowHealth){

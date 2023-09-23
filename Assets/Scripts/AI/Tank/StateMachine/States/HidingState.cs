@@ -35,7 +35,7 @@ namespace CE6127.Tanks.AI
                 return;
             }
             else{
-               m_StateMachine.ChangeState(m_TankSM.m_States.Patrolling); 
+                m_StateMachine.ChangeState(m_TankSM.m_States.Patrolling); 
             }
 
             if(Vector3.Magnitude(HideSpot -  m_TankSM.transform.position) <= 2f){

@@ -42,19 +42,17 @@ namespace CE6127.Tanks.AI
 
             //Debug.Log("In range finding state:");
 
-            // Go Grace!
-
             // once good range is reached ie max StopDistance away (22f), go back to Chasing state
             if (m_TankSM.DistanceToTarget >= m_TankSM.StopDistance) // StopDistance = 22f
             {
-                Debug.Log("changing state to chasing");
+                // Debug.Log("changing state to chasing");
                 Active = false;
                 m_StateMachine.ChangeState(m_TankSM.m_States.Chasing);
                 return; 
             }
 
             // update rangefinding destination
-            Debug.Log("update destination");
+            // Debug.Log("update destination");
             m_TankSM.NavMeshAgent.SetDestination(m_Destination);
         }
 
@@ -69,7 +67,7 @@ namespace CE6127.Tanks.AI
         }
 
         /// <summary>
-        /// Coroutine <c>Patrolling</c> patrolling coroutine.
+        /// Coroutine <c>RangeFinding</c> rangefinding coroutine.
         /// </summary>
         IEnumerator RangeFinding()
         {

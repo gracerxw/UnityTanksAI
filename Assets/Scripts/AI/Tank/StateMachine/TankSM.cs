@@ -315,12 +315,8 @@ namespace CE6127.Tanks.AI
                 //Debug.Log("Normal prediction");
             }
 
-            
-            
-
             float precisionDistToTarget = Vector3.Distance(this.transform.position+transform.forward*barrelOffset, Target.position + tDir * GameManager.Speed * shotLeadFactor);
             float flightTime = Mathf.Sqrt(2*((1.7f + precisionDistToTarget*Mathf.Tan(10*Mathf.PI/180))/gravity));//approximate flight time of shell based on current dist to player tank
-            
 
             float shellVelocity = precisionDistToTarget/(flightTime*Mathf.Cos(10*Mathf.PI/180));//calculate shell velocity based on precise distance
 
@@ -339,8 +335,6 @@ namespace CE6127.Tanks.AI
 
         public void Aim()
         {
-            
-
             // Calculate the desired rotation based on the target position.
             float gravity = 9.81f;
             tDir = Vector3.Normalize(Target.position - TargetStoredPos); //unit vector for tank direction
@@ -354,7 +348,6 @@ namespace CE6127.Tanks.AI
             lookPos.y = 0f;
             var rot = Quaternion.LookRotation(lookPos); //turn to face look position
             this.transform.rotation = Quaternion.Slerp(this.transform.rotation, rot, this.OrientSlerpScalar);//turn at maximum turn rate
-
 
             // var lookPos = Target.position + approxTargetTravel * tDir * shotLeadFactor - this.transform.position;
             // lookPos.y = 0f;
@@ -396,8 +389,7 @@ namespace CE6127.Tanks.AI
             NavMeshAgent.SetDestination(m_Destination);
         }
 
-        // For JUSTIN:
-        // TODO: If tank under attack, how to shift 
+        // If tank under attack, how to shift 
         public void AvoidEnemy(){
             float prob = Random.Range(0.0f, 1.0f);
             evadeDistance = Random.Range(3.0f, 6.0f);
@@ -411,7 +403,6 @@ namespace CE6127.Tanks.AI
                 evadeDirection = -1 * toTarget;
             }
             
-
             // 10% chance for totally random movement
             if (prob >= (1.0f - randomProb)){
                 evadeDirection = Quaternion.AngleAxis(Random.Range(0.0f, 360.0f), Vector3.up) * toTarget;
@@ -473,7 +464,7 @@ namespace CE6127.Tanks.AI
             if(obstacle == Vector3.zero){
                 AttackTarget();
             }else {
-                AvoidObstacle();
+                AvoidObstacle(); 
             }
         }
     }
