@@ -94,7 +94,7 @@ namespace CE6127.Tanks.AI
         public float Wigglefactor = 10f;// set multiplication factor for the slow player position update that will be used to check if they are wiggling to throw off our predictive aim
         private float WiggleTrackInterval; //interval between slow position updates
         private float WiggleCooldown;//current time left between slow position updates
-        public float mstrShotLeadFactor = 1.05f; //multiplication factor to determine how far in front of the tanks direction to shoot
+        public float mstrShotLeadFactor = 1.15f; //multiplication factor to determine how far in front of the tanks direction to shoot
         [HideInInspector] public float shotLeadFactor; //current shot lead factor
         [HideInInspector] public Vector3 TargetStoredPos = new Vector3(-1,-1,-1);//stored location of player tank updated every ActualTrackInterval period
         [HideInInspector] public Vector3 NewSlowTargetStoredPos = new Vector3(-1,-1,-1);//slow stored location updated every WiggleTrackInterval period
@@ -107,6 +107,7 @@ namespace CE6127.Tanks.AI
         private float approxTargetTravel;
         private Vector3 tDir;
 
+        public float EngagementRange = 25f;
         // for evading
         float moveBackProb = 0.15f;
         float randomProb = 0.1f;
@@ -383,8 +384,8 @@ namespace CE6127.Tanks.AI
             // rotate around target, maintaining distance
             Vector3 toTarget = Target.position - transform.position; 
             toTarget = toTarget.normalized;
-            evadeDirection = Quaternion.AngleAxis(15.0f, Vector3.up) * toTarget;
-            Vector3 m_Destination = Target.transform.position + evadeDirection*TargetDistance;
+            evadeDirection = Quaternion.AngleAxis(5.0f, Vector3.up) * toTarget;
+            Vector3 m_Destination = Target.transform.position + evadeDirection*EngagementRange;
             NavMeshAgent.SetDestination(m_Destination);
         }
 
